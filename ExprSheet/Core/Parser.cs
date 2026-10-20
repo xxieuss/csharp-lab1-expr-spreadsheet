@@ -20,6 +20,7 @@ public class Parser {
         _lexemeStart = 0;
         ErrorText = "";
         ErrorPos = -1;
+        _depth = 0;
 
         try {
             NextLexeme();
@@ -90,10 +91,12 @@ public class Parser {
         }
 
         if (_lexeme == "(") {
+            EnterLevel();
             NextLexeme();
             Node inside = ParseLogical();
             if (_lexeme != ")") throw Error("Очікувалася закривна дужка");
             NextLexeme();
+            _depth--;
             return inside;
         }
 
@@ -123,8 +126,11 @@ public class Parser {
     private Node ParsePower() {
         Node left = ParseUnary();
         if (_lexeme == "^") {
+            EnterLevel();
             NextLexeme();
-            return new BinaryNode("^", left, ParsePower());
+            Node right = ParsePower();
+            _depth--;
+            return new BinaryNode("^", left, right);
         }
         return left;
     }
@@ -132,16 +138,22 @@ public class Parser {
     private Node ParseUnary() {
         if (_lexeme == "+" || _lexeme == "-") {
             string op = _lexeme;
+            EnterLevel();
             NextLexeme();
-            return new UnaryNode(op, ParseUnary());
+            Node operand = ParseUnary();
+            _depth--;
+            return new UnaryNode(op, operand);
         }
         return ParsePrimary();
     }
 
     private Node ParseLogical() {
         if (_lexeme == "not") {
+            EnterLevel();
             NextLexeme();
-            return new UnaryNode("not", ParseLogical());
+            Node operand = ParseLogical();
+            _depth--;
+            return new UnaryNode("not", operand);
         }
         return ParseCompare();
     }
@@ -154,5 +166,12 @@ public class Parser {
             return new BinaryNode(op, left, ParseSum());
         }
         return left;
+    }
+
+    private const int MaxDepth = 500;
+    private int _depth;
+
+    private void EnterLevel() {
+        if (++_depth > MaxDepth) throw Error("Занадто глибока вкладеність виразу");
     }
 }

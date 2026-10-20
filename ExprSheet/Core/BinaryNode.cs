@@ -28,24 +28,24 @@ public class BinaryNode : Node {
             case "-": return Value.FromNumber(a - b);
             case "*": return Value.FromNumber(a * b);
             case "/":
-                if (b == 0) throw new InvalidOperationException("Ділення на нуль");
+                if (b == 0) throw new EvalException("Ділення на нуль");
                 return Value.FromNumber(a / b);
             case "^":
-                if (b < 0) throw new InvalidOperationException("Відʼємний показник степеня дає не ціле число");
-                if (b > 100000) throw new InvalidOperationException("Завеликий показник степеня");
+                if (b < 0) throw new EvalException("Відʼємний показник степеня дає не ціле число");
+                if (b > 100000) throw new EvalException("Завеликий показник степеня");
                 return Value.FromNumber(BigInteger.Pow(a, (int)b));
             case "<=": return Value.FromBool(a <= b);
             case ">=": return Value.FromBool(a >= b);
             default:
-                throw new InvalidOperationException($"Невідома операція: {_op}");
+                throw new EvalException($"Невідома операція: {_op}");
         }
     }
 
     private static bool AreEqual(Value x, Value y) {
-        if (x.Kind != y.Kind) throw new InvalidOperationException("Порівнюються значення різних типів");
+        if (x.Kind != y.Kind) throw new EvalException("Порівнюються значення різних типів");
         if (x.Kind == ValueKind.Number) return x.AsNumber() == y.AsNumber();
         if (x.Kind == ValueKind.Boolean) return x.AsBool() == y.AsBool();
-        throw new InvalidOperationException("Порожня клітинка у порівнянні");
+        throw new EvalException("Порожня клітинка у порівнянні");
     }
 
     public override string ToText() => $"({_left.ToText()} {_op} {_right.ToText()})";

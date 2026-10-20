@@ -27,13 +27,19 @@ public class Value {
 
     public static Value FromBool(bool b) => new Value(ValueKind.Boolean, BigInteger.Zero, b);
 
+        private static string KindName(ValueKind kind) => kind switch {
+        ValueKind.Number  => "число",
+        ValueKind.Boolean => "логічне значення",
+        _                 => "порожню клітинку"
+    };
+
     public BigInteger AsNumber() {
-        if (Kind != ValueKind.Number) throw new InvalidOperationException($"Очікувалося число, а отримано {Kind}");
+        if (Kind != ValueKind.Number) throw new EvalException($"Очікувалося число, а отримано {KindName(Kind)}");
         return _number;
     }
 
     public bool AsBool() {
-        if (Kind != ValueKind.Boolean) throw new InvalidOperationException($"Очікувалося логічне значення, а отримано {Kind}");
+        if (Kind != ValueKind.Boolean) throw new EvalException($"Очікувалося логічне значення, а отримано {KindName(Kind)}");
         return _flag;
     }
 

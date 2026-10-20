@@ -8,6 +8,6 @@ public abstract class Node {
     public abstract List<string> CollectRefs();
 
     protected static void CheckDepth(int depth) {
-        if (depth > MaxDepth) throw new InvalidOperationException("Занадто глибока вкладеність виразу");
+        if (depth > MaxDepth) throw new EvalException("Занадто глибока вкладеність виразу");
     }
 }
