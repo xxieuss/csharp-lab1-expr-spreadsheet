@@ -1,25 +1,27 @@
-﻿using System.Numerics;
-using Core;
+﻿using Core;
 
 Sheet sheet = new Sheet();
+Parser parser = new Parser();
 
-// -(2 + 3) * 4
-Node tree = new BinaryNode("*", new UnaryNode("-", new BinaryNode("+", new NumberNode(2), new NumberNode(3))), 
-new NumberNode(4));
-
-Console.WriteLine($"Вираз:    {tree.ToText()}");
-Console.WriteLine($"Значення: {tree.Evaluate(sheet, 0)}");
-
-// 2 ^ 100
-Node big = new BinaryNode("^", new NumberNode(2), new NumberNode(100));
-Console.WriteLine($"{big.ToText()} = {big.Evaluate(sheet, 0)}");
-
-// 7 / 2
-Node div = new BinaryNode("/", new NumberNode(7), new NumberNode(2));
-Console.WriteLine($"{div.ToText()} = {div.Evaluate(sheet, 0)}");
-
-try {
-    new BinaryNode("/", new NumberNode(1), new NumberNode(0)).Evaluate(sheet, 0);
-} catch (InvalidOperationException ex) {
-    Console.WriteLine($"Помилка: {ex.Message}");
+void Check(string text) {
+    Node? tree = parser.Parse(text);
+    Console.WriteLine($"  [{text}]");
+    if (tree == null) {
+        string pad = new string(' ', Math.Max(0, parser.ErrorPos) + 3);
+        Console.WriteLine($"{pad}^ {parser.ErrorText}  (позиція {parser.ErrorPos + 1})");
+    } else {
+        Console.WriteLine($"   OK: {tree.ToText()} = {tree.Evaluate(sheet, 0)}");
+    }
+    Console.WriteLine();
 }
+
+Check("42");
+Check("   7   ");
+Check("(123)");
+Check("((5))");
+Check("123456789012345678901234567890");
+Check("");
+Check("(42");
+Check("42)");
+Check("4 2");
+Check("12 # 3");
