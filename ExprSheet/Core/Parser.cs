@@ -23,7 +23,7 @@ public class Parser {
 
         try {
             NextLexeme();
-            Node node = ParseSum();
+            Node node = ParseLogical();
             if (_lexeme != "") throw Error($"Зайві символи після виразу: '{_lexeme}'");
             return node;
         } catch (SyntaxException ex) {
@@ -58,6 +58,7 @@ public class Parser {
             int start = _pos;
             while (_pos < _text.Length && char.IsLetterOrDigit(_text[_pos])) _pos++;
             _lexeme = _text.Substring(start, _pos - start);
+            if (_lexeme.ToLowerInvariant() == "not") _lexeme = "not";
             return;
         }
 
@@ -90,7 +91,7 @@ public class Parser {
 
         if (_lexeme == "(") {
             NextLexeme();
-            Node inside = ParseSum();
+            Node inside = ParseLogical();
             if (_lexeme != ")") throw Error("Очікувалася закривна дужка");
             NextLexeme();
             return inside;
@@ -135,5 +136,23 @@ public class Parser {
             return new UnaryNode(op, ParseUnary());
         }
         return ParsePrimary();
+    }
+
+    private Node ParseLogical() {
+        if (_lexeme == "not") {
+            NextLexeme();
+            return new UnaryNode("not", ParseLogical());
+        }
+        return ParseCompare();
+    }
+
+    private Node ParseCompare() {
+        Node left = ParseSum();
+        if (_lexeme == "<=" || _lexeme == ">=" || _lexeme == "<>") {
+            string op = _lexeme;
+            NextLexeme();
+            return new BinaryNode(op, left, ParseSum());
+        }
+        return left;
     }
 }

@@ -13,11 +13,15 @@ public class UnaryNode : Node {
 
     public override Value Evaluate(Sheet sheet, int depth) {
         CheckDepth(depth);
-        BigInteger v = _operand.Evaluate(sheet, depth + 1).AsNumber();
-        return Value.FromNumber(_op == "-" ? -v : v);
+        Value v = _operand.Evaluate(sheet, depth + 1);
+
+        if (_op == "not") return Value.FromBool(!v.AsBool());
+
+        BigInteger n = v.AsNumber();
+        return Value.FromNumber(_op == "-" ? -n : n);
     }
 
-    public override string ToText() => $"({_op}{_operand.ToText()})";
+    public override string ToText() => _op == "not" ? $"(not {_operand.ToText()})" : $"({_op}{_operand.ToText()})";
 
     public override List<string> CollectRefs() => _operand.CollectRefs();
 }

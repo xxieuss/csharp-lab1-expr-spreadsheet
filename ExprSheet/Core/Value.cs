@@ -39,7 +39,7 @@ public class Value {
 
     public override string ToString() => Kind switch {
         ValueKind.Number  => _number.ToString(),
-        ValueKind.Boolean => _flag ? "True" : "False",
+        ValueKind.Boolean => _flag ? "Істина" : "Хиба",
         _                 => ""
     };
 }

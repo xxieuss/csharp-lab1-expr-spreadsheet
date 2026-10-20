@@ -13,10 +13,15 @@ public class BinaryNode : Node {
         _right = right;
     }
 
-    public override Value Evaluate(Sheet sheet, int depth) {
+        public override Value Evaluate(Sheet sheet, int depth) {
         CheckDepth(depth);
-        BigInteger a = _left.Evaluate(sheet, depth + 1).AsNumber();
-        BigInteger b = _right.Evaluate(sheet, depth + 1).AsNumber();
+        Value l = _left.Evaluate(sheet, depth + 1);
+        Value r = _right.Evaluate(sheet, depth + 1);
+
+        if (_op == "<>") return Value.FromBool(!AreEqual(l, r));
+
+        BigInteger a = l.AsNumber();
+        BigInteger b = r.AsNumber();
 
         switch (_op) {
             case "+": return Value.FromNumber(a + b);
@@ -29,9 +34,18 @@ public class BinaryNode : Node {
                 if (b < 0) throw new InvalidOperationException("Відʼємний показник степеня дає не ціле число");
                 if (b > 100000) throw new InvalidOperationException("Завеликий показник степеня");
                 return Value.FromNumber(BigInteger.Pow(a, (int)b));
+            case "<=": return Value.FromBool(a <= b);
+            case ">=": return Value.FromBool(a >= b);
             default:
                 throw new InvalidOperationException($"Невідома операція: {_op}");
         }
+    }
+
+    private static bool AreEqual(Value x, Value y) {
+        if (x.Kind != y.Kind) throw new InvalidOperationException("Порівнюються значення різних типів");
+        if (x.Kind == ValueKind.Number) return x.AsNumber() == y.AsNumber();
+        if (x.Kind == ValueKind.Boolean) return x.AsBool() == y.AsBool();
+        throw new InvalidOperationException("Порожня клітинка у порівнянні");
     }
 
     public override string ToText() => $"({_left.ToText()} {_op} {_right.ToText()})";
