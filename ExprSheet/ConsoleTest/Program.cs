@@ -15,13 +15,14 @@ void Check(string text) {
     Console.WriteLine();
 }
 
-Check("42");
-Check("   7   ");
-Check("(123)");
-Check("((5))");
-Check("123456789012345678901234567890");
-Check("");
-Check("(42");
-Check("42)");
-Check("4 2");
-Check("12 # 3");
+Check("2 + 3 * 4");
+Check("(2 + 3) * 4");
+Check("2 ^ 3 ^ 2");
+Check("-2 ^ 2");
+Check("2 - 3 - 4");
+Check("100 / 7 / 2");
+Check("- - 5");
+Check("2 * (3 + (4 - 1) * 2)");
+Check("2 +");
+Check("* 3");
+Check("(2 + 3");

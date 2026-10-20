@@ -23,7 +23,7 @@ public class Parser {
 
         try {
             NextLexeme();
-            Node node = ParsePrimary();
+            Node node = ParseSum();
             if (_lexeme != "") throw Error($"Зайві символи після виразу: '{_lexeme}'");
             return node;
         } catch (SyntaxException ex) {
@@ -90,12 +90,50 @@ public class Parser {
 
         if (_lexeme == "(") {
             NextLexeme();
-            Node inside = ParsePrimary();
+            Node inside = ParseSum();
             if (_lexeme != ")") throw Error("Очікувалася закривна дужка");
             NextLexeme();
             return inside;
         }
 
         throw Error($"Очікувалося число або дужка, а отримано '{_lexeme}'");
+    }
+
+    private Node ParseSum() {
+        Node left = ParseProduct();
+        while (_lexeme == "+" || _lexeme == "-") {
+            string op = _lexeme;
+            NextLexeme();
+            left = new BinaryNode(op, left, ParseProduct());
+        }
+        return left;
+    }
+
+    private Node ParseProduct() {
+        Node left = ParsePower();
+        while (_lexeme == "*" || _lexeme == "/") {
+            string op = _lexeme;
+            NextLexeme();
+            left = new BinaryNode(op, left, ParsePower());
+        }
+        return left;
+    }
+
+    private Node ParsePower() {
+        Node left = ParseUnary();
+        if (_lexeme == "^") {
+            NextLexeme();
+            return new BinaryNode("^", left, ParsePower());
+        }
+        return left;
+    }
+
+    private Node ParseUnary() {
+        if (_lexeme == "+" || _lexeme == "-") {
+            string op = _lexeme;
+            NextLexeme();
+            return new UnaryNode(op, ParseUnary());
+        }
+        return ParsePrimary();
     }
 }
