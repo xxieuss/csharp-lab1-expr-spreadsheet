@@ -90,6 +90,13 @@ public class Parser {
             return new NumberNode(value);
         }
 
+        if (char.IsLetter(_lexeme[0])) {
+            string name = _lexeme;
+            if (!IsCellName(name)) throw Error($"Невідоме ім'я '{name}'");
+            NextLexeme();
+            return new CellRefNode(name.ToUpperInvariant());
+        }
+
         if (_lexeme == "(") {
             EnterLevel();
             NextLexeme();
@@ -173,5 +180,14 @@ public class Parser {
 
     private void EnterLevel() {
         if (++_depth > MaxDepth) throw Error("Занадто глибока вкладеність виразу");
+    }
+
+    private static bool IsCellName(string s) {
+        int i = 0;
+        while (i < s.Length && char.IsLetter(s[i])) i++;
+        if (i == 0 || i == s.Length) return false;
+        for (int j = i; j < s.Length; j++)
+            if (!char.IsDigit(s[j])) return false;
+        return true;
     }
 }

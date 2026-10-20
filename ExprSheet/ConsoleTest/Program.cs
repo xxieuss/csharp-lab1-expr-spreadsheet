@@ -1,8 +1,16 @@
 ﻿using Core;
 
-Sheet sheet = new Sheet();
+Sheet sheet = new Sheet(5, 4);
 Parser parser = new Parser();
 Evaluator evaluator = new Evaluator();
+
+Console.WriteLine($"Таблиця {sheet.Rows}×{sheet.Cols}, стовпці: " +
+    string.Join(" ", Enumerable.Range(0, sheet.Cols).Select(Sheet.ColumnName)));
+Console.WriteLine();
+
+sheet.SetValue(sheet.GetCell("A1"), Value.FromNumber(10));
+sheet.SetValue(sheet.GetCell("B1"), Value.FromNumber(32));
+sheet.SetValue(sheet.GetCell("a2"), Value.FromBool(true));
 
 void Check(string text) {
     Console.WriteLine($"  [{text}]");
@@ -25,29 +33,14 @@ void Check(string text) {
     Console.WriteLine();
 }
 
-void CheckLong(string name, string text) {
-    Console.WriteLine($"  {name}");
-    Node? tree = parser.Parse(text);
-    if (tree == null) {
-        Console.WriteLine($"   Етап 1 — помилка: {parser.ErrorText}  (позиція {parser.ErrorPos + 1})");
-    } else {
-        Value? v = evaluator.Evaluate(tree, sheet);
-        Console.WriteLine(v == null
-            ? $"   Етап 2 — помилка: {evaluator.ErrorText}"
-            : $"   OK = {v}");
-    }
-    Console.WriteLine();
-}
-
-Check("not 5");
-Check("1 / 0");
-Check("2 ^ -1");
-Check("2 ^ 1000000");
-Check("(2 <= 3) <= 4");
-Check("2 <= (3 <= 4)");
-
-CheckLong("100 дужок",    new string('(', 100) + "1" + new string(')', 100));
-CheckLong("600 дужок",    new string('(', 600) + "1" + new string(')', 600));
-CheckLong("600 мінусів",  new string('-', 600) + "1");
-CheckLong("100 доданків", string.Join("+", Enumerable.Repeat("1", 100)));
-CheckLong("600 доданків", string.Join("+", Enumerable.Repeat("1", 600)));
+Check("A1");
+Check("A1 + B1");
+Check("A1 + B1 <= 42");
+Check("not A2");
+Check("A1 ^ 3 >= B1 * 30");
+Check("C1 + 1");
+Check("A99 + 1");
+Check("Z1");
+Check("abc");
+Check("A1B2");
+Check("AAAAA1");
