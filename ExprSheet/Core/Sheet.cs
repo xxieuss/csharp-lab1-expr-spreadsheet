@@ -68,4 +68,26 @@ public class Sheet {
             throw new EvalException($"Некоректне посилання '{name}'");
         return (row - 1, col - 1);
     }
+
+    public void AddRow(int index) {
+        List<Cell> row = new List<Cell>();
+        for (int c = 0; c < Cols; c++) row.Add(new Cell());
+        _rows.Insert(index, row);
+        Rename();
+    }
+
+    public void RemoveRow(int index) {
+        _rows.RemoveAt(index);
+        Rename();
+    }
+
+    public void AddColumn(int index) {
+        foreach (List<Cell> row in _rows) row.Insert(index, new Cell());
+        Rename();
+    }
+
+    public void RemoveColumn(int index) {
+        foreach (List<Cell> row in _rows) row.RemoveAt(index);
+        Rename();
+    }
 }

@@ -38,23 +38,24 @@ public class SheetController {
 
     public bool SetCellFormula(Cell cell, string text) {
         cell.Formula = text;
+        Relink(cell);
+        Recalculate(cell);
+        return !cell.HasError();
+    }
+
+    private bool Relink(Cell cell) {
         cell.ErrorText = "";
         cell.ErrorPos = -1;
         cell.Ast = null;
         cell.Value = Value.Empty;
+        Graph.SetDependencies(cell, new List<Cell>());
 
-        if (text.Trim().Length == 0) {
-            Graph.SetDependencies(cell, new List<Cell>());
-            Recalculate(cell);
-            return true;
-        }
+        if (cell.Formula.Trim().Length == 0) return true;
 
-        Node? ast = _parser.Parse(text);
+        Node? ast = _parser.Parse(cell.Formula);
         if (ast == null) {
             cell.ErrorText = _parser.ErrorText;
             cell.ErrorPos = _parser.ErrorPos;
-            Graph.SetDependencies(cell, new List<Cell>());
-            Recalculate(cell);
             return false;
         }
 
@@ -72,13 +73,11 @@ public class SheetController {
         if (Graph.HasCycle(cell)) {
             Graph.SetDependencies(cell, new List<Cell>());
             cell.ErrorText = "Циклічне посилання";
-            Recalculate(cell);
             return false;
         }
 
         cell.Ast = ast;
-        Recalculate(cell);
-        return !cell.HasError();
+        return true;
     }
 
     private void Recalculate(Cell start) {
@@ -112,5 +111,49 @@ public class SheetController {
         } else {
             Sheet.SetValue(cell, result);
         }
+    }
+
+    public bool AddRow(int index) {
+        if (index < 0 || index > Sheet.Rows) return false;
+        Sheet.AddRow(index);
+        Rebuild();
+        return true;
+    }
+
+    public bool RemoveRow(int index) {
+        if (Sheet.Rows <= 1 || index < 0 || index >= Sheet.Rows) return false;
+        Sheet.RemoveRow(index);
+        Rebuild();
+        return true;
+    }
+
+    public bool AddColumn(int index) {
+        if (index < 0 || index > Sheet.Cols) return false;
+        Sheet.AddColumn(index);
+        Rebuild();
+        return true;
+    }
+
+    public bool RemoveColumn(int index) {
+        if (Sheet.Cols <= 1 || index < 0 || index >= Sheet.Cols) return false;
+        Sheet.RemoveColumn(index);
+        Rebuild();
+        return true;
+    }
+
+    private void Rebuild() {
+        Graph = new DependencyGraph();
+
+        bool selectedAlive = false;
+        for (int r = 0; r < Sheet.Rows; r++) {
+            for (int c = 0; c < Sheet.Cols; c++) {
+                Cell cell = Sheet.GetCell(r, c);
+                if (cell == Selected) selectedAlive = true;
+                Relink(cell);
+            }
+        }
+        if (!selectedAlive) Selected = null;
+
+        foreach (Cell cell in Graph.TopologicalOrder()) EvaluateOne(cell);
     }
 }
