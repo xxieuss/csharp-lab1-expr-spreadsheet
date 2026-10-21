@@ -6,9 +6,6 @@
     xmlns:local="clr-namespace:Ui"
     Title="Ui">
 
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+    <ShellContent Title="Таблиця" ContentTemplate="{DataTemplate local:MainPage}" Route="MainPage" />
 
 </Shell>

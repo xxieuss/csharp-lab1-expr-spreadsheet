@@ -1,23 +1,34 @@
-﻿namespace Ui;
+﻿using Core;
+using Cell = Core.Cell;
 
-public partial class MainPage : ContentPage
-{
-	int count = 0;
+namespace Ui;
 
-	public MainPage()
-	{
-		InitializeComponent();
-	}
+public partial class MainPage : ContentPage {
+    private readonly SheetController _controller = new SheetController();
 
-	private void OnCounterClicked(object? sender, EventArgs e)
-	{
-		count++;
+    public MainPage() {
+        InitializeComponent();
+        _controller.NewSheet(3, 3);
+    }
 
-		if (count == 1)
-			CounterBtn.Text = $"Clicked {count} time";
-		else
-			CounterBtn.Text = $"Clicked {count} times";
+    private void OnCalculate(object? sender, EventArgs e) {
+        Cell cell = _controller.SelectCell("A1");
+        _controller.SetCellFormula(cell, FormulaEntry.Text ?? "");
+        ShowCell(cell);
+    }
 
-		SemanticScreenReader.Announce(CounterBtn.Text);
-	}
+    private void ShowCell(Cell cell) {
+        if (cell.HasError()) {
+            ResultLabel.Text = "";
+            ErrorLabel.Text = cell.ErrorPos >= 0
+                ? $"{cell.ErrorText}  (позиція {cell.ErrorPos + 1})"
+                : cell.ErrorText;
+        } else {
+            ResultLabel.Text = $"Значення: {cell.Value}";
+            ErrorLabel.Text = "";
+        }
+
+        Node? tree = _controller.GetTree(cell);
+        TreeLabel.Text = tree == null ? "" : "Дерево розбору:\n" + tree.ToTree(1);
+    }
 }
