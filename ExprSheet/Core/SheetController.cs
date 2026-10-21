@@ -212,4 +212,11 @@ public class SheetController {
     public Node? GetTree(Cell cell) => cell.Ast;
 
     public List<string> GetTrace(Cell cell) => cell.Ast == null ? new List<string>() : _evaluator.EvaluateWithTrace(cell.Ast, Sheet);
+
+    public void Save(IStorage storage, string name) => storage.Save(Sheet, name);
+
+    public void Load(IStorage storage, string name) {
+        Sheet = storage.Load(name);
+        Rebuild();
+    }
 }
