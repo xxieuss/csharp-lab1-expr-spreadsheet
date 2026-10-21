@@ -7,6 +7,8 @@ public class CellRefNode : Node {
         _name = name;
     }
 
+    public string Name => _name;
+
     public override Value Evaluate(Sheet sheet, int depth) {
         CheckDepth(depth);
         return sheet.GetValue(_name);

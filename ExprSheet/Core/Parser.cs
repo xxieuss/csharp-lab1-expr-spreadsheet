@@ -24,7 +24,7 @@ public class Parser {
 
         try {
             NextLexeme();
-            Node node = ParseLogical();
+            Node node = ParseStatement();
             if (_lexeme != "") throw Error($"Зайві символи після виразу: '{_lexeme}'");
             return node;
         } catch (SyntaxException ex) {
@@ -59,7 +59,8 @@ public class Parser {
             int start = _pos;
             while (_pos < _text.Length && char.IsLetterOrDigit(_text[_pos])) _pos++;
             _lexeme = _text.Substring(start, _pos - start);
-            if (_lexeme.ToLowerInvariant() == "not") _lexeme = "not";
+            string lower = _lexeme.ToLowerInvariant();
+            if (lower == "not" || lower == "if" || lower == "then") _lexeme = lower;
             return;
         }
 
@@ -189,5 +190,30 @@ public class Parser {
         for (int j = i; j < s.Length; j++)
             if (!char.IsDigit(s[j])) return false;
         return true;
+    }
+
+    private Node ParseStatement() {
+        if (_lexeme == "if") {
+            EnterLevel();
+            NextLexeme();
+            Node condition = ParseLogical();
+            if (_lexeme != "then") throw Error("Очікувалося 'then' після умови");
+            NextLexeme();
+            Node thenPart = ParseStatement();
+            _depth--;
+            return new IfNode(condition, thenPart);
+        }
+
+        int startPos = _lexemeStart;
+        Node left = ParseLogical();
+
+        if (_lexeme == ":=") {
+            if (left is not CellRefNode target)
+                throw new SyntaxException("Ліворуч від ':=' має стояти ім'я клітинки", startPos);
+            NextLexeme();
+            return new AssignNode(target.Name, ParseLogical());
+        }
+
+        return left;
     }
 }

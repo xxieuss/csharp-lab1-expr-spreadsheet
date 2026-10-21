@@ -28,35 +28,29 @@ public class SheetController {
         return cell;
     }
 
-    public List<Cell> GetDependencies(Cell cell) => Graph.GetPrecedents(cell);
-
-    public void ClearCell(Cell cell) {
-        cell.Clear();
-        Graph.SetDependencies(cell, new List<Cell>());
-        Recalculate(cell);
-    }
+    public List<Cell> GetDependents(Cell cell) => Graph.GetDependents(cell);
 
     public bool SetCellFormula(Cell cell, string text) {
         cell.Formula = text;
-        Relink(cell);
-        Recalculate(cell);
+        Rebuild();
         return !cell.HasError();
     }
 
-    private bool Relink(Cell cell) {
-        cell.ErrorText = "";
-        cell.ErrorPos = -1;
-        cell.Ast = null;
-        cell.Value = Value.Empty;
-        Graph.SetDependencies(cell, new List<Cell>());
+    public void ClearCell(Cell cell) => SetCellFormula(cell, "");
 
-        if (cell.Formula.Trim().Length == 0) return true;
+    private void Link(Cell cell) {
+        if (cell.Formula.Trim().Length == 0) return;
+
+        if (cell.WrittenBy != null) {
+            cell.ErrorText = $"У цю клітинку пише {cell.WrittenBy.Name}";
+            return;
+        }
 
         Node? ast = _parser.Parse(cell.Formula);
         if (ast == null) {
             cell.ErrorText = _parser.ErrorText;
             cell.ErrorPos = _parser.ErrorPos;
-            return false;
+            return;
         }
 
         List<Cell> refs = new List<Cell>();
@@ -70,14 +64,12 @@ public class SheetController {
 
         Graph.SetDependencies(cell, refs);
 
-        if (Graph.HasCycle(cell)) {
+        if (ast is AssignNode assign && !BindTarget(cell, assign.TargetName)) {
             Graph.SetDependencies(cell, new List<Cell>());
-            cell.ErrorText = "Циклічне посилання";
-            return false;
+            return;
         }
 
         cell.Ast = ast;
-        return true;
     }
 
     private void Recalculate(Cell start) {
@@ -100,6 +92,11 @@ public class SheetController {
 
     private void EvaluateOne(Cell cell) {
         if (cell.Ast == null) {
+            if (cell.WrittenBy != null) {
+                cell.Value = cell.WrittenBy.Value;
+                cell.ErrorText = cell.WrittenBy.ErrorText;
+                return;
+            }
             if (!cell.HasError()) cell.Value = Value.Empty;
             return;
         }
@@ -149,11 +146,66 @@ public class SheetController {
             for (int c = 0; c < Sheet.Cols; c++) {
                 Cell cell = Sheet.GetCell(r, c);
                 if (cell == Selected) selectedAlive = true;
-                Relink(cell);
+                string formula = cell.Formula;
+                cell.Clear();
+                cell.Formula = formula;
+                cell.WritesTo = null;
+                cell.WrittenBy = null;
             }
         }
         if (!selectedAlive) Selected = null;
 
+        for (int r = 0; r < Sheet.Rows; r++)
+            for (int c = 0; c < Sheet.Cols; c++)
+                Link(Sheet.GetCell(r, c));
+
+        for (int r = 0; r < Sheet.Rows; r++) {
+            for (int c = 0; c < Sheet.Cols; c++) {
+                Cell cell = Sheet.GetCell(r, c);
+                if (cell.Ast == null) continue;
+                if (!Graph.HasCycle(cell)) continue;
+                UnbindTarget(cell);
+                Graph.SetDependencies(cell, new List<Cell>());
+                cell.Ast = null;
+                cell.ErrorText = "Циклічне посилання";
+            }
+        }
+
         foreach (Cell cell in Graph.TopologicalOrder()) EvaluateOne(cell);
+    }
+
+    private bool BindTarget(Cell cell, string targetName) {
+        Cell target;
+        try {
+            target = Sheet.GetCell(targetName);
+        } catch (EvalException ex) {
+            cell.ErrorText = ex.Message;
+            return false;
+        }
+
+        if (target == cell) {
+            cell.ErrorText = "Клітинка не може присвоювати сама собі";
+            return false;
+        }
+        if (target.Formula.Trim().Length > 0) {
+            cell.ErrorText = $"Клітинка {target.Name} має власний вміст";
+            return false;
+        }
+        if (target.WrittenBy != null) {
+            cell.ErrorText = $"У клітинку {target.Name} вже пише {target.WrittenBy.Name}";
+            return false;
+        }
+
+        cell.WritesTo = target;
+        target.WrittenBy = cell;
+        Graph.SetDependencies(target, new List<Cell> { cell });
+        return true;
+    }
+
+    private void UnbindTarget(Cell cell) {
+        if (cell.WritesTo == null) return;
+        cell.WritesTo.WrittenBy = null;
+        Graph.SetDependencies(cell.WritesTo, new List<Cell>());
+        cell.WritesTo = null;
     }
 }

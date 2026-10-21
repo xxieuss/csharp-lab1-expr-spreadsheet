@@ -7,6 +7,8 @@ public class Cell {
     public string ErrorText { get; internal set; } = "";
     public int ErrorPos { get; internal set; } = -1;
     public Node? Ast { get; internal set; }
+    internal Cell? WritesTo { get; set; }
+    internal Cell? WrittenBy { get; set; }
 
     public bool HasError() => ErrorText.Length > 0;
 
