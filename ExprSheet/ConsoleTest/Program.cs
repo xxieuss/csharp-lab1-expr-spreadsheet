@@ -1,48 +1,39 @@
 ﻿using Core;
 
 SheetController app = new SheetController();
-app.NewSheet(6, 4);
+app.NewSheet(5, 4);
 
 string Show(Cell c) => c.HasError() ? $"ПОМИЛКА: {c.ErrorText}" : c.Value.ToString();
 
 void Set(string name, string formula) {
     Cell cell = app.SelectCell(name);
     bool ok = app.SetCellFormula(cell, formula);
-    Console.WriteLine($"{(ok ? "ok" : "!!")}  {name} = {formula,-18} -> {Show(cell)}");
+    Console.WriteLine($"{(ok ? "ok" : "!!")}  {name} = {formula,-22} -> {Show(cell)}");
 }
 
-void Dump(string title, DisplayMode mode, int w) {
-    Console.WriteLine();
-    Console.WriteLine(title);
-    Console.Write("    ");
-    for (int c = 0; c < app.Sheet.Cols; c++)
-        Console.Write(Sheet.ColumnName(c).PadLeft(w));
-    Console.WriteLine();
-    for (int r = 0; r < app.Sheet.Rows; r++) {
-        Console.Write($"{r + 1,3} ");
-        for (int c = 0; c < app.Sheet.Cols; c++)
-            Console.Write(app.Sheet.GetCell(r, c).Display(mode).PadLeft(w));
-        Console.WriteLine();
-    }
+void ShowTree(string name) {
+    Cell cell = app.SelectCell(name);
+    Console.WriteLine($"\nДерево розбору {name}   [{cell.Formula}]");
+    Node? tree = app.GetTree(cell);
+    Console.Write(tree == null ? "   (немає)\n" : tree.ToTree(1));
+}
+
+void ShowTrace(string name) {
+    Cell cell = app.SelectCell(name);
+    Console.WriteLine($"\nПокрокове обчислення {name}   [{cell.Formula}]");
+    foreach (string line in app.GetTrace(cell)) Console.WriteLine($"   {line}");
 }
 
 Set("A1", "10");
-Set("B1", "if A1 <= 10 then A1 * 2");
-Set("B2", "if A1 <= 5 then A1 * 2");
-Set("C1", "A3 := A1 + 5");
-Set("D1", "A3 * 100");
+Set("A2", "4");
+Set("B1", "(A1 + A2) * 2 <= 30");
+Set("C1", "if B1 then A1 ^ A2");
+Set("B2", "A4 := A1 + A2");
+Set("D1", "A1 / (A2 - 4)");
 
-Dump("Режим ЗНАЧЕННЯ:", DisplayMode.Value, 14);
-Dump("Режим ВИРАЗ:", DisplayMode.Expression, 26);
-
-Console.WriteLine();
-Set("A1", "3");
-Dump("Після A1 = 3:", DisplayMode.Value, 14);
-
-Console.WriteLine();
-Set("C2", "A3 := 1");
-Set("C3", "A1 := 1");
-Set("C4", "A4 := A4 + 1");
-Set("C5", "5 := 1");
-Set("C6", "if A1 then 1");
-Set("D2", "if A1 <= 5 1");
+ShowTree("B1");
+ShowTrace("B1");
+ShowTree("C1");
+ShowTrace("C1");
+ShowTrace("B2");
+ShowTrace("D1");

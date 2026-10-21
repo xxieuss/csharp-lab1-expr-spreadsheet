@@ -208,4 +208,8 @@ public class SheetController {
         Graph.SetDependencies(cell.WritesTo, new List<Cell>());
         cell.WritesTo = null;
     }
+
+    public Node? GetTree(Cell cell) => cell.Ast;
+
+    public List<string> GetTrace(Cell cell) => cell.Ast == null ? new List<string>() : _evaluator.EvaluateWithTrace(cell.Ast, Sheet);
 }

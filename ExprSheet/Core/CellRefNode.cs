@@ -9,12 +9,14 @@ public class CellRefNode : Node {
 
     public string Name => _name;
 
-    public override Value Evaluate(Sheet sheet, int depth) {
+    public override Value Evaluate(Sheet sheet, int depth, List<string>? trace) {
         CheckDepth(depth);
-        return sheet.GetValue(_name);
+        return Report(sheet.GetValue(_name), trace);
     }
 
     public override string ToText() => _name;
 
     public override List<string> CollectRefs() => new List<string> { _name };
+
+    public override string ToTree(int level) => $"{Indent(level)}клітинка {_name}\n";
 }

@@ -13,11 +13,14 @@ public class BinaryNode : Node {
         _right = right;
     }
 
-        public override Value Evaluate(Sheet sheet, int depth) {
+    public override Value Evaluate(Sheet sheet, int depth, List<string>? trace) {
         CheckDepth(depth);
-        Value l = _left.Evaluate(sheet, depth + 1);
-        Value r = _right.Evaluate(sheet, depth + 1);
+        Value l = _left.Evaluate(sheet, depth + 1, trace);
+        Value r = _right.Evaluate(sheet, depth + 1, trace);
+        return Report(Compute(l, r), trace);
+    }
 
+    private Value Compute(Value l, Value r) {
         if (_op == "<>") return Value.FromBool(!AreEqual(l, r));
 
         BigInteger a = l.AsNumber();
@@ -40,6 +43,8 @@ public class BinaryNode : Node {
                 throw new EvalException($"Невідома операція: {_op}");
         }
     }
+
+    public override string ToTree(int level) => $"{Indent(level)}операція {_op}\n" + _left.ToTree(level + 1) + _right.ToTree(level + 1);
 
     private static bool AreEqual(Value x, Value y) {
         if (x.Kind != y.Kind) throw new EvalException("Порівнюються значення різних типів");

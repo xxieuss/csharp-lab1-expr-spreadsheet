@@ -17,4 +17,19 @@ public class Evaluator {
             return null;
         }
     }
+
+    public List<string> EvaluateWithTrace(Node ast, Sheet sheet) {
+        List<string> trace = new List<string>();
+        ErrorText = "";
+
+        try {
+            Value result = ast.Evaluate(sheet, 0, trace);
+            trace.Add($"результат: {result}");
+        } catch (EvalException ex) {
+            ErrorText = ex.Message;
+            trace.Add($"помилка: {ex.Message}");
+        }
+
+        return trace;
+    }
 }

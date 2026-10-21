@@ -9,9 +9,16 @@ public class IfNode : Node {
         _thenPart = thenPart;
     }
 
-    public override Value Evaluate(Sheet sheet, int depth) {
+    public override Value Evaluate(Sheet sheet, int depth, List<string>? trace) {
         CheckDepth(depth);
-        if (_condition.Evaluate(sheet, depth + 1).AsBool()) return _thenPart.Evaluate(sheet, depth + 1);
+        Value condition = _condition.Evaluate(sheet, depth + 1, trace);
+
+        if (condition.AsBool()) {
+            trace?.Add("умова істинна, обчислюємо гілку then");
+            return _thenPart.Evaluate(sheet, depth + 1, trace);
+        }
+
+        trace?.Add("умова хибна, клітинка лишається порожньою");
         return Value.Empty;
     }
 
@@ -22,4 +29,7 @@ public class IfNode : Node {
         result.AddRange(_thenPart.CollectRefs());
         return result;
     }
+
+        public override string ToTree(int level) => $"{Indent(level)}умовний оператор\n" + $"{Indent(level + 1)}умова\n" 
+        + _condition.ToTree(level + 2) + $"{Indent(level + 1)}тоді\n" + _thenPart.ToTree(level + 2);
 }

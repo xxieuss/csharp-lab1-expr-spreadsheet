@@ -11,17 +11,19 @@ public class UnaryNode : Node {
         _operand = operand;
     }
 
-    public override Value Evaluate(Sheet sheet, int depth) {
+    public override Value Evaluate(Sheet sheet, int depth, List<string>? trace) {
         CheckDepth(depth);
-        Value v = _operand.Evaluate(sheet, depth + 1);
+        Value v = _operand.Evaluate(sheet, depth + 1, trace);
 
-        if (_op == "not") return Value.FromBool(!v.AsBool());
+        if (_op == "not") return Report(Value.FromBool(!v.AsBool()), trace);
 
         BigInteger n = v.AsNumber();
-        return Value.FromNumber(_op == "-" ? -n : n);
+        return Report(Value.FromNumber(_op == "-" ? -n : n), trace);
     }
 
     public override string ToText() => _op == "not" ? $"(not {_operand.ToText()})" : $"({_op}{_operand.ToText()})";
 
     public override List<string> CollectRefs() => _operand.CollectRefs();
+
+    public override string ToTree(int level) => $"{Indent(level)}операція {_op}\n" + _operand.ToTree(level + 1);
 }
