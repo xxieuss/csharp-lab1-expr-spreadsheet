@@ -4,21 +4,30 @@
              x:Class="Ui.MainPage"
              Title="Електронна таблиця">
 
-    <VerticalStackLayout Padding="20" Spacing="12">
+    <Grid RowDefinitions="Auto,Auto,Auto,*" Padding="10" RowSpacing="8">
 
-        <Label Text="Вміст клітинки A1" FontAttributes="Bold" FontSize="16" />
-
-        <HorizontalStackLayout Spacing="8">
-            <Entry x:Name="FormulaEntry"
-                   Placeholder="наприклад  (2 + 3) * 4 &lt;= 20"
-                   WidthRequest="420"
-                   Completed="OnCalculate" />
-            <Button Text="Обчислити" Clicked="OnCalculate" />
+        <HorizontalStackLayout Grid.Row="0" Spacing="6">
+            <Button x:Name="ModeButton" Text="Режим: ЗНАЧЕННЯ" Clicked="OnToggleMode" />
+            <Button Text="+ рядок" Clicked="OnAddRow" />
+            <Button Text="− рядок" Clicked="OnRemoveRow" />
+            <Button Text="+ стовпець" Clicked="OnAddColumn" />
+            <Button Text="− стовпець" Clicked="OnRemoveColumn" />
         </HorizontalStackLayout>
 
-        <Label x:Name="ResultLabel" FontSize="18" />
-        <Label x:Name="ErrorLabel" TextColor="Firebrick" />
-        <Label x:Name="TreeLabel" FontSize="13" />
+        <Grid Grid.Row="1" ColumnDefinitions="70,*" ColumnSpacing="8">
+            <Label x:Name="CellNameLabel" FontAttributes="Bold" FontSize="15"
+                   VerticalTextAlignment="Center" />
+            <Entry x:Name="FormulaEntry" Grid.Column="1"
+                   Placeholder="вміст клітинки"
+                   Completed="OnFormulaCommitted" />
+        </Grid>
 
-    </VerticalStackLayout>
+        <Label x:Name="ErrorLabel" Grid.Row="2" TextColor="Firebrick" FontSize="13" />
+
+        <ScrollView Grid.Row="3" Orientation="Both">
+            <Grid x:Name="SheetGrid" RowSpacing="1" ColumnSpacing="1"
+                  BackgroundColor="#999999" />
+        </ScrollView>
+
+    </Grid>
 </ContentPage>
