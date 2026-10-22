@@ -4,9 +4,15 @@
              x:Class="Ui.MainPage"
              Title="Електронна таблиця">
 
-    <Grid RowDefinitions="Auto,Auto,Auto,*" Padding="10" RowSpacing="8">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" Padding="10" RowSpacing="8">
 
         <HorizontalStackLayout Grid.Row="0" Spacing="6">
+            <Button Text="Нова" Clicked="OnNew" />
+            <Button Text="Відкрити" Clicked="OnOpen" />
+            <Button Text="Зберегти" Clicked="OnSave" />
+        </HorizontalStackLayout>
+
+        <HorizontalStackLayout Grid.Row="1" Spacing="6">
             <Button x:Name="ModeButton" Text="Режим: ЗНАЧЕННЯ" Clicked="OnToggleMode" />
             <Button Text="+ рядок" Clicked="OnAddRow" />
             <Button Text="− рядок" Clicked="OnRemoveRow" />
@@ -14,7 +20,7 @@
             <Button Text="− стовпець" Clicked="OnRemoveColumn" />
         </HorizontalStackLayout>
 
-        <Grid Grid.Row="1" ColumnDefinitions="70,*" ColumnSpacing="8">
+        <Grid Grid.Row="2" ColumnDefinitions="70,*" ColumnSpacing="8">
             <Label x:Name="CellNameLabel" FontAttributes="Bold" FontSize="15"
                    VerticalTextAlignment="Center" />
             <Entry x:Name="FormulaEntry" Grid.Column="1"
@@ -22,9 +28,9 @@
                    Completed="OnFormulaCommitted" />
         </Grid>
 
-        <Label x:Name="ErrorLabel" Grid.Row="2" TextColor="Firebrick" FontSize="13" />
+        <Label x:Name="ErrorLabel" Grid.Row="3" TextColor="Firebrick" FontSize="13" />
 
-        <ScrollView Grid.Row="3" Orientation="Both">
+        <ScrollView Grid.Row="4" Orientation="Both">
             <Grid x:Name="SheetGrid" RowSpacing="1" ColumnSpacing="1"
                   BackgroundColor="#999999" />
         </ScrollView>

@@ -12,6 +12,8 @@ public partial class MainPage : ContentPage {
     private Button[,] _buttons = new Button[0, 0];
     private int _row;
     private int _col;
+	private readonly IStorage _storage = new LocalFileStorage();
+    private string _currentName = "";
 
     public MainPage() {
         InitializeComponent();
@@ -139,5 +141,62 @@ public partial class MainPage : ContentPage {
         BuildGrid();
         SelectCell(Math.Min(_row, _controller.Sheet.Rows - 1),
                    Math.Min(_col, _controller.Sheet.Cols - 1));
+    }
+
+	private async void OnNew(object? sender, EventArgs e) {
+        string? rowsText = await DisplayPromptAsync("Нова таблиця", "Кількість рядків:",
+            initialValue: "12", keyboard: Keyboard.Numeric);
+        if (rowsText == null) return;
+
+        string? colsText = await DisplayPromptAsync("Нова таблиця", "Кількість стовпців:",
+            initialValue: "6", keyboard: Keyboard.Numeric);
+        if (colsText == null) return;
+
+        if (!int.TryParse(rowsText, out int rows) || rows < 1 || rows > 500 ||
+            !int.TryParse(colsText, out int cols) || cols < 1 || cols > 100) {
+            await DisplayAlert("Помилка", "Розмір має бути від 1×1 до 500×100", "Гаразд");
+            return;
+        }
+
+        _controller.NewSheet(rows, cols);
+        _currentName = "";
+        BuildGrid();
+        SelectCell(0, 0);
+    }
+
+    private async void OnSave(object? sender, EventArgs e) {
+        string? name = await DisplayPromptAsync("Зберегти таблицю", "Назва файлу:",
+            initialValue: _currentName.Length > 0 ? _currentName : "таблиця.json");
+        if (name == null) return;
+
+        name = name.Trim();
+        if (name.Length == 0) return;
+        if (!name.EndsWith(".json")) name += ".json";
+
+        string path = Path.Combine(FileSystem.AppDataDirectory, name);
+
+        try {
+            _controller.Save(_storage, path);
+            _currentName = name;
+            await DisplayAlert("Збережено", path, "Гаразд");
+        } catch (StorageException ex) {
+            await DisplayAlert("Не вдалося зберегти", ex.Message, "Гаразд");
+        }
+    }
+
+    private async void OnOpen(object? sender, EventArgs e) {
+        try {
+            FileResult? file = await FilePicker.Default.PickAsync();
+            if (file == null) return;
+
+            _controller.Load(_storage, file.FullPath);
+            _currentName = file.FileName;
+            BuildGrid();
+            SelectCell(0, 0);
+        } catch (StorageException ex) {
+            await DisplayAlert("Не вдалося відкрити", ex.Message, "Гаразд");
+        } catch (Exception ex) {
+            await DisplayAlert("Не вдалося відкрити", ex.Message, "Гаразд");
+        }
     }
 }
