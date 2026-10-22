@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Ui.HelpPage"
+             Title="Довідка">
+
+    <Grid RowDefinitions="Auto,*" Padding="16" RowSpacing="12">
+
+        <HorizontalStackLayout Grid.Row="0" Spacing="6">
+            <Button Text="Синтаксис виразів" Clicked="OnSyntax" />
+            <Button Text="Операції варіанта" Clicked="OnOperations" />
+            <Button Text="Міні-мова" Clicked="OnLanguage" />
+        </HorizontalStackLayout>
+
+        <ScrollView Grid.Row="1">
+            <Label x:Name="TextLabel" FontSize="14" LineHeight="1.35" />
+        </ScrollView>
+
+    </Grid>
+</ContentPage>

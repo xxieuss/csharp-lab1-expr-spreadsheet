@@ -7,6 +7,7 @@ public class Parser {
     private int _pos;
     private string _lexeme = "";
     private int _lexemeStart;
+    private bool _allowAssign;
 
     public string ErrorText { get; private set; } = "";
     public int ErrorPos { get; private set; } = -1;
@@ -21,6 +22,7 @@ public class Parser {
         ErrorText = "";
         ErrorPos = -1;
         _depth = 0;
+        _allowAssign = true;
 
         try {
             NextLexeme();
@@ -199,7 +201,12 @@ public class Parser {
             Node condition = ParseLogical();
             if (_lexeme != "then") throw Error("Очікувалося 'then' після умови");
             NextLexeme();
+
+            bool saved = _allowAssign;
+            _allowAssign = false;
             Node thenPart = ParseStatement();
+            _allowAssign = saved;
+
             _depth--;
             return new IfNode(condition, thenPart);
         }
@@ -208,6 +215,8 @@ public class Parser {
         Node left = ParseLogical();
 
         if (_lexeme == ":=") {
+            if (!_allowAssign)
+                throw new SyntaxException("Присвоєння може бути лише на початку вмісту клітинки", startPos);
             if (left is not CellRefNode target)
                 throw new SyntaxException("Ліворуч від ':=' має стояти ім'я клітинки", startPos);
             NextLexeme();

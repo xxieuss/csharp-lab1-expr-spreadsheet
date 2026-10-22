@@ -4,8 +4,19 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:Ui"
-    Title="Ui">
+    Shell.FlyoutBehavior="Flyout"
+    Title="Електронна таблиця">
 
-    <ShellContent Title="Таблиця" ContentTemplate="{DataTemplate local:MainPage}" Route="MainPage" />
+    <ShellContent Title="Таблиця"
+                  ContentTemplate="{DataTemplate local:MainPage}"
+                  Route="MainPage" />
+
+    <ShellContent Title="Довідка"
+                  ContentTemplate="{DataTemplate local:HelpPage}"
+                  Route="HelpPage" />
+
+    <ShellContent Title="Про програму"
+                  ContentTemplate="{DataTemplate local:AboutPage}"
+                  Route="AboutPage" />
 
 </Shell>
