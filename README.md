@@ -52,3 +52,7 @@
 cd ExprSheet
 dotnet run --project ConsoleTest
 ```
+
+## Google Drive
+
+Для роботи з Google Drive потрібен власний OAuth-клієнт: створити проєкт у Google Cloud Console, увімкнути Google Drive API, створити обліковий запис типу Desktop app і покласти завантажений `client_secret.json` у `ExprSheet/Ui/Resources/Raw/`.

@@ -19,6 +19,8 @@ public partial class MainPage : ContentPage {
     private string _currentName = "";
     private Border[,] _cells = new Border[0, 0];
 
+    private GoogleDriveStorage? _drive;
+
     public MainPage() {
         InitializeComponent();
         _controller.NewSheet(12, 6);
@@ -299,5 +301,62 @@ public partial class MainPage : ContentPage {
     private void ShowInfo(string text) {
         InfoLabel.Text = text;
         InfoPanel.IsVisible = true;
+    }
+
+    private async Task<GoogleDriveStorage> GetDriveAsync() {
+        if (_drive != null) return _drive;
+
+        using Stream stream = await FileSystem.OpenAppPackageFileAsync("client_secret.json");
+        using StreamReader reader = new StreamReader(stream);
+        string secret = await reader.ReadToEndAsync();
+
+        _drive = new GoogleDriveStorage(secret,
+            Path.Combine(FileSystem.AppDataDirectory, "drive-token"),
+            url => MainThread.BeginInvokeOnMainThread(() => Browser.Default.OpenAsync(url, BrowserLaunchMode.SystemPreferred)));
+
+        return _drive;
+    }
+
+    private static string NormalizeName(string name) {
+        name = name.Trim();
+        if (name.Length > 0 && !name.EndsWith(".json")) name += ".json";
+        return name;
+    }
+
+    private async void OnDriveSave(object? sender, EventArgs e) {
+        string? input = await DisplayPromptAsync("Зберегти на Google Drive", "Назва файлу:",
+            initialValue: _currentName.Length > 0 ? _currentName : "таблиця.json");
+        if (input == null) return;
+
+        string name = NormalizeName(input);
+        if (name.Length == 0) return;
+
+        try {
+            GoogleDriveStorage drive = await GetDriveAsync();
+            await Task.Run(() => _controller.Save(drive, name));
+            _currentName = name;
+            await DisplayAlert("Google Drive", $"Збережено як «{name}»", "Гаразд");
+        } catch (Exception ex) {
+            await DisplayAlert("Google Drive", ex.Message, "Гаразд");
+        }
+    }
+
+    private async void OnDriveOpen(object? sender, EventArgs e) {
+        string? input = await DisplayPromptAsync("Відкрити з Google Drive", "Назва файлу:",
+            initialValue: _currentName.Length > 0 ? _currentName : "таблиця.json");
+        if (input == null) return;
+
+        string name = NormalizeName(input);
+        if (name.Length == 0) return;
+
+        try {
+            GoogleDriveStorage drive = await GetDriveAsync();
+            await Task.Run(() => _controller.Load(drive, name));
+            _currentName = name;
+            BuildGrid();
+            SelectCell(0, 0);
+        } catch (Exception ex) {
+            await DisplayAlert("Google Drive", ex.Message, "Гаразд");
+        }
     }
 }

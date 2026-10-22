@@ -481,3 +481,6 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 .DS_Store
+
+# Secrets
+client_secret.json
