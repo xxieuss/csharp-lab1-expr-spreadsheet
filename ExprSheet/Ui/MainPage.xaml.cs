@@ -17,6 +17,7 @@ public partial class MainPage : ContentPage {
     private int _col;
 	private readonly IStorage _storage = new LocalFileStorage();
     private string _currentName = "";
+    private Border[,] _cells = new Border[0, 0];
 
     public MainPage() {
         InitializeComponent();
@@ -49,52 +50,73 @@ public partial class MainPage : ContentPage {
         for (int r = 0; r < rows; r++)
             SheetGrid.Add(MakeHeader((r + 1).ToString()), 0, r + 1);
 
-        _buttons = new Button[rows, cols];
+        _cells = new Border[rows, cols];
 
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
-                int row = r;
-                int col = c;
-
-                Button button = new Button {
-                    BackgroundColor = Colors.White,
-                    TextColor = Colors.Black,
-                    FontSize = 13,
-                    Padding = 0,
-                    CornerRadius = 0,
-                    BorderWidth = 0
-                };
-                button.Clicked += (s, e) => SelectCell(row, col);
-
-                _buttons[r, c] = button;
-                SheetGrid.Add(button, c + 1, r + 1);
+                Border cell = MakeCell(r, c);
+                _cells[r, c] = cell;
+                SheetGrid.Add(cell, c + 1, r + 1);
             }
         }
 
         RefreshGrid();
     }
 
+    private Border MakeCell(int row, int col) {
+        Label label = new Label {
+            FontSize = 13,
+            TextColor = Palette.Text,
+            VerticalTextAlignment = TextAlignment.Center,
+            Padding = new Thickness(8, 0),
+            LineBreakMode = LineBreakMode.TailTruncation
+        };
+
+        Border border = new Border {
+            Content = label,
+            BackgroundColor = Palette.Cell,
+            Stroke = Colors.Transparent,
+            StrokeThickness = 0,
+            Padding = 0
+        };
+
+        TapGestureRecognizer tap = new TapGestureRecognizer();
+        tap.Tapped += (s, e) => SelectCell(row, col);
+        border.GestureRecognizers.Add(tap);
+
+        return border;
+    }
+
     private static Label MakeHeader(string text) => new Label {
         Text = text,
         FontAttributes = FontAttributes.Bold,
         FontSize = 12,
-        TextColor = Colors.Black,
-        BackgroundColor = Color.FromArgb("#DDDDDD"),
+        TextColor = Palette.TextDim,
+        BackgroundColor = Palette.Header,
         HorizontalTextAlignment = TextAlignment.Center,
         VerticalTextAlignment = TextAlignment.Center
     };
 
     private void RefreshGrid() {
+        bool expressions = _controller.Mode == DisplayMode.Expression;
+
         for (int r = 0; r < _controller.Sheet.Rows; r++) {
             for (int c = 0; c < _controller.Sheet.Cols; c++) {
                 Cell cell = _controller.Sheet.GetCell(r, c);
-                Button button = _buttons[r, c];
+                Border border = _cells[r, c];
+                Label label = (Label)border.Content!;
 
-                button.Text = cell.Display(_controller.Mode);
-                button.TextColor = cell.HasError() ? Colors.Firebrick : Colors.Black;
-                button.BackgroundColor = (r == _row && c == _col)
-                    ? Color.FromArgb("#CCE4FF")
-                    : Colors.White;
+                bool selected = r == _row && c == _col;
+
+                label.Text = cell.Display(_controller.Mode);
+                label.TextColor = cell.HasError() ? Palette.ErrorText : Palette.Text;
+                label.HorizontalTextAlignment = expressions ? TextAlignment.Start : TextAlignment.End;
+
+                border.BackgroundColor = cell.HasError() ? Palette.CellError
+                                       : selected        ? Palette.CellSel
+                                       :                   Palette.Cell;
+                border.Stroke = selected ? Palette.Accent : Colors.Transparent;
+                border.StrokeThickness = selected ? 2 : 0;
             }
         }
     }
@@ -119,7 +141,9 @@ public partial class MainPage : ContentPage {
     private void OnFormulaCommitted(object? sender, EventArgs e) {
         Cell cell = _controller.Sheet.GetCell(_row, _col);
         _controller.SetCellFormula(cell, FormulaEntry.Text ?? "");
-        SelectCell(_row, _col);
+
+        SelectCell(Math.Min(_row + 1, _controller.Sheet.Rows - 1), _col);
+        FormulaEntry.Focus();
     }
 
     private void OnToggleMode(object? sender, EventArgs e) {
@@ -128,7 +152,12 @@ public partial class MainPage : ContentPage {
             : DisplayMode.Value;
 
         _controller.SetDisplayMode(mode);
-        ModeButton.Text = mode == DisplayMode.Value ? "Режим: ЗНАЧЕННЯ" : "Режим: ВИРАЗ";
+
+        bool expressions = mode == DisplayMode.Expression;
+        ModeButton.Text = expressions ? "Режим: ВИРАЗ" : "Режим: ЗНАЧЕННЯ";
+        ModeButton.BackgroundColor = expressions ? Palette.Accent : Palette.ButtonBg;
+        ModeButton.TextColor = expressions ? Palette.Window : Palette.Text;
+
         RefreshGrid();
     }
 

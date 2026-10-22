@@ -1,10 +1,13 @@
-<?xml version="1.0" encoding="UTF-8" ?>
 <Shell
     x:Class="Ui.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:Ui"
     Shell.FlyoutBehavior="Flyout"
+    Shell.BackgroundColor="{x:Static local:Palette.Header}"
+    Shell.ForegroundColor="{x:Static local:Palette.Text}"
+    Shell.TitleColor="{x:Static local:Palette.Text}"
+    FlyoutBackgroundColor="{x:Static local:Palette.Card}"
     Title="Електронна таблиця">
 
     <ShellContent Title="Таблиця"

@@ -1,19 +1,21 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:Ui"
              x:Class="Ui.HelpPage"
-             Title="Довідка">
+             Title="Довідка"
+             BackgroundColor="{x:Static local:Palette.Window}">
 
-    <Grid RowDefinitions="Auto,*" Padding="16" RowSpacing="12">
+    <Grid RowDefinitions="Auto,*" Padding="24,20" RowSpacing="18">
 
-        <HorizontalStackLayout Grid.Row="0" Spacing="6">
+        <HorizontalStackLayout Grid.Row="0" Spacing="8">
             <Button Text="Синтаксис виразів" Clicked="OnSyntax" />
             <Button Text="Операції варіанта" Clicked="OnOperations" />
             <Button Text="Міні-мова" Clicked="OnLanguage" />
         </HorizontalStackLayout>
 
         <ScrollView Grid.Row="1">
-            <Label x:Name="TextLabel" FontSize="14" LineHeight="1.35" />
+            <Label x:Name="TextLabel" Style="{StaticResource Body}" />
         </ScrollView>
 
     </Grid>

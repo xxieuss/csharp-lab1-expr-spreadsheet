@@ -1,52 +1,77 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:Ui"
              x:Class="Ui.MainPage"
-             Title="Електронна таблиця">
+             Title="Електронна таблиця"
+             BackgroundColor="{x:Static local:Palette.Window}">
 
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto" Padding="10" RowSpacing="8">
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Padding="16" RowSpacing="12">
 
-        <HorizontalStackLayout Grid.Row="0" Spacing="6">
-            <Button Text="Нова" Clicked="OnNew" />
-            <Button Text="Відкрити" Clicked="OnOpen" />
-            <Button Text="Зберегти" Clicked="OnSave" />
-        </HorizontalStackLayout>
+        <Border Grid.Row="0" Style="{StaticResource Card}">
+            <VerticalStackLayout Spacing="10">
 
-        <HorizontalStackLayout Grid.Row="1" Spacing="6">
-            <Button x:Name="ModeButton" Text="Режим: ЗНАЧЕННЯ" Clicked="OnToggleMode" />
-            <Button Text="+ рядок" Clicked="OnAddRow" />
-            <Button Text="− рядок" Clicked="OnRemoveRow" />
-            <Button Text="+ стовпець" Clicked="OnAddColumn" />
-            <Button Text="− стовпець" Clicked="OnRemoveColumn" />
-        </HorizontalStackLayout>
+                <HorizontalStackLayout Spacing="8">
+                    <Button Text="Нова" Clicked="OnNew" />
+                    <Button Text="Відкрити" Clicked="OnOpen" />
+                    <Button Text="Зберегти" Clicked="OnSave" />
+                </HorizontalStackLayout>
 
-        <HorizontalStackLayout Grid.Row="2" Spacing="6">
-            <Button Text="Дерево розбору" Clicked="OnShowTree" />
-            <Button Text="Покрокове обчислення" Clicked="OnShowTrace" />
-            <Button Text="Залежності" Clicked="OnShowDependencies" />
-            <Button Text="Сховати" Clicked="OnHideInfo" />
-        </HorizontalStackLayout>
+                <HorizontalStackLayout Spacing="8">
+                    <Button x:Name="ModeButton" Text="Режим: ЗНАЧЕННЯ" Clicked="OnToggleMode" />
+                    <Button Text="+ рядок" Clicked="OnAddRow" />
+                    <Button Text="− рядок" Clicked="OnRemoveRow" />
+                    <Button Text="+ стовпець" Clicked="OnAddColumn" />
+                    <Button Text="− стовпець" Clicked="OnRemoveColumn" />
+                </HorizontalStackLayout>
 
-        <Grid Grid.Row="3" ColumnDefinitions="70,*" ColumnSpacing="8">
-            <Label x:Name="CellNameLabel" FontAttributes="Bold" FontSize="15"
-                   VerticalTextAlignment="Center" />
-            <Entry x:Name="FormulaEntry" Grid.Column="1"
-                   Placeholder="вміст клітинки"
-                   Completed="OnFormulaCommitted" />
-        </Grid>
+                <HorizontalStackLayout Spacing="8">
+                    <Button Text="Дерево розбору" Clicked="OnShowTree" />
+                    <Button Text="Покрокове обчислення" Clicked="OnShowTrace" />
+                    <Button Text="Залежності" Clicked="OnShowDependencies" />
+                </HorizontalStackLayout>
 
-        <Label x:Name="ErrorLabel" Grid.Row="4" TextColor="Firebrick" FontSize="13" />
+            </VerticalStackLayout>
+        </Border>
 
-        <ScrollView Grid.Row="5" Orientation="Both">
-            <Grid x:Name="SheetGrid" RowSpacing="1" ColumnSpacing="1"
-                  BackgroundColor="#999999" />
-        </ScrollView>
+        <Border Grid.Row="1" Style="{StaticResource Card}">
+            <VerticalStackLayout Spacing="8">
+                <Grid ColumnDefinitions="60,*" ColumnSpacing="10">
+                    <Label x:Name="CellNameLabel"
+                           FontAttributes="Bold" FontSize="15"
+                           TextColor="{x:Static local:Palette.Accent}"
+                           VerticalTextAlignment="Center" />
+                    <Entry x:Name="FormulaEntry" Grid.Column="1"
+                           Placeholder="вміст клітинки"
+                           FontSize="14"
+                           BackgroundColor="{x:Static local:Palette.Cell}"
+                           TextColor="{x:Static local:Palette.Text}"
+                           PlaceholderColor="{x:Static local:Palette.TextDim}"
+                           Completed="OnFormulaCommitted" />
+                </Grid>
+                <Label x:Name="ErrorLabel" FontSize="13"
+                       TextColor="{x:Static local:Palette.ErrorText}" />
+            </VerticalStackLayout>
+        </Border>
 
-        <ScrollView x:Name="InfoPanel" Grid.Row="6" IsVisible="False"
-                    MaximumHeightRequest="220" BackgroundColor="#F2F2F2">
-            <Label x:Name="InfoLabel" Padding="10" FontSize="13"
-                   FontFamily="Courier New" TextColor="Black" />
-        </ScrollView>
+        <Border Grid.Row="2" Style="{StaticResource Card}" Padding="10">
+            <ScrollView Orientation="Both">
+                <Grid x:Name="SheetGrid" RowSpacing="1" ColumnSpacing="1"
+                      HorizontalOptions="Start" VerticalOptions="Start"
+                      BackgroundColor="{x:Static local:Palette.GridLine}" />
+            </ScrollView>
+        </Border>
+
+        <Border x:Name="InfoPanel" Grid.Row="3" Style="{StaticResource Card}" IsVisible="False">
+            <Grid RowDefinitions="Auto,*" RowSpacing="8">
+                <Button Grid.Row="0" Text="Сховати" Clicked="OnHideInfo"
+                        HorizontalOptions="End" />
+                <ScrollView Grid.Row="1" MaximumHeightRequest="200">
+                    <Label x:Name="InfoLabel" FontSize="13" FontFamily="Courier New"
+                           TextColor="{x:Static local:Palette.Text}" />
+                </ScrollView>
+            </Grid>
+        </Border>
 
     </Grid>
 </ContentPage>
