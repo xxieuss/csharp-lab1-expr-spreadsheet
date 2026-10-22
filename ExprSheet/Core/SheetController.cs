@@ -28,6 +28,8 @@ public class SheetController {
         return cell;
     }
 
+    public List<Cell> GetDependencies(Cell cell) => Graph.GetPrecedents(cell);
+
     public List<Cell> GetDependents(Cell cell) => Graph.GetDependents(cell);
 
     public bool SetCellFormula(Cell cell, string text) {

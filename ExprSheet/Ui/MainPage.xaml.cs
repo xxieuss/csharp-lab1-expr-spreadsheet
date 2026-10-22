@@ -7,6 +7,9 @@ public partial class MainPage : ContentPage {
     private const int CellWidth = 110;
     private const int CellHeight = 34;
     private const int HeaderWidth = 46;
+    private enum InfoView { None, Tree, Trace, Dependencies }
+
+    private InfoView _infoView = InfoView.None;
 
     private readonly SheetController _controller = new SheetController();
     private Button[,] _buttons = new Button[0, 0];
@@ -110,6 +113,7 @@ public partial class MainPage : ContentPage {
             : "";
 
         RefreshGrid();
+        if (_infoView != InfoView.None) RefreshInfo();
     }
 
     private void OnFormulaCommitted(object? sender, EventArgs e) {
@@ -198,5 +202,73 @@ public partial class MainPage : ContentPage {
         } catch (Exception ex) {
             await DisplayAlert("Не вдалося відкрити", ex.Message, "Гаразд");
         }
+    }
+
+    private void OnShowTree(object? sender, EventArgs e) {
+        _infoView = InfoView.Tree;
+        RefreshInfo();
+    }
+
+    private void OnShowTrace(object? sender, EventArgs e) {
+        _infoView = InfoView.Trace;
+        RefreshInfo();
+    }
+
+    private void OnShowDependencies(object? sender, EventArgs e) {
+        _infoView = InfoView.Dependencies;
+        RefreshInfo();
+    }
+
+    private void OnHideInfo(object? sender, EventArgs e) {
+        _infoView = InfoView.None;
+        InfoPanel.IsVisible = false;
+    }
+
+    private void RefreshInfo() {
+        Cell cell = _controller.Sheet.GetCell(_row, _col);
+
+        switch (_infoView) {
+            case InfoView.Tree:
+                ShowTree(_controller.GetTree(cell));
+                break;
+            case InfoView.Trace:
+                ShowTrace(_controller.GetTrace(cell));
+                break;
+            case InfoView.Dependencies:
+                ShowDependencies(_controller.GetDependencies(cell), _controller.GetDependents(cell));
+                break;
+        }
+    }
+
+    private void ShowTree(Node? tree) {
+        ShowInfo(tree == null
+            ? $"ДЕРЕВО РОЗБОРУ {_controller.Sheet.GetCell(_row, _col).Name}\n\n"
+              + "Дерева немає: клітинка порожня або містить синтаксичну помилку."
+            : $"ДЕРЕВО РОЗБОРУ {_controller.Sheet.GetCell(_row, _col).Name}\n\n" + tree.ToTree(0));
+    }
+
+    private void ShowTrace(List<string> steps) {
+        string title = $"ПОКРОКОВЕ ОБЧИСЛЕННЯ {_controller.Sheet.GetCell(_row, _col).Name}\n\n";
+        ShowInfo(steps.Count == 0
+            ? title + "Обчислювати нічого: клітинка порожня або містить синтаксичну помилку."
+            : title + string.Join("\n", steps));
+    }
+
+    private void ShowDependencies(List<Cell> precedents, List<Cell> dependents) {
+        string from = precedents.Count == 0
+            ? "немає"
+            : string.Join(", ", precedents.Select(c => c.Name));
+        string to = dependents.Count == 0
+            ? "немає"
+            : string.Join(", ", dependents.Select(c => c.Name));
+
+        ShowInfo($"ЗАЛЕЖНОСТІ {_controller.Sheet.GetCell(_row, _col).Name}\n\n"
+                 + $"Залежить від: {from}\n"
+                 + $"Від неї залежать: {to}");
+    }
+
+    private void ShowInfo(string text) {
+        InfoLabel.Text = text;
+        InfoPanel.IsVisible = true;
     }
 }
