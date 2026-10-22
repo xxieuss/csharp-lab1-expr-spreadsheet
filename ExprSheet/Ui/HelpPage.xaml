@@ -8,10 +8,11 @@
 
     <Grid RowDefinitions="Auto,*" Padding="24,20" RowSpacing="18">
 
-        <HorizontalStackLayout Grid.Row="0" Spacing="8">
-            <Button Text="Синтаксис виразів" Clicked="OnSyntax" />
-            <Button Text="Операції варіанта" Clicked="OnOperations" />
-            <Button Text="Міні-мова" Clicked="OnLanguage" />
+        <HorizontalStackLayout Spacing="8">
+            <Button Text="Синтаксис" Clicked="OnSyntax" />
+            <Button Text="Операції" Clicked="OnOperations" />
+            <Button Text="Мова" Clicked="OnLanguage" />
+            <Button Text="Файли" Clicked="OnFiles" />
         </HorizontalStackLayout>
 
         <ScrollView Grid.Row="1">
