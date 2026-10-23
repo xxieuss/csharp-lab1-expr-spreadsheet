@@ -5,7 +5,7 @@
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
         <mxCell id="BB35QoDHw3HfkVfVzI56-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontSize=14;fontStyle=1;glass=0;shadow=1;" value="Електронна таблиця з обчисленням виразів" vertex="1">
-          <mxGeometry height="1630" width="1310" x="120" y="20" as="geometry" />
+          <mxGeometry height="1710" width="1310" x="120" y="20" as="geometry" />
         </mxCell>
         <mxCell id="BB35QoDHw3HfkVfVzI56-2" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=12;" value="Користувач" vertex="1">
           <mxGeometry height="60" width="30" x="40" y="900" as="geometry" />
@@ -177,6 +177,12 @@
         </mxCell>
         <mxCell id="BB35QoDHw3HfkVfVzI56-70" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=12;" value="Переглянути довідку з&amp;nbsp;&lt;div&gt;міні-мови&lt;/div&gt;" vertex="1">
           <mxGeometry height="54" width="190" x="580" y="1554" as="geometry" />
+        </mxCell>
+        <mxCell id="BB35QoDHw3HfkVfVzI56-82" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=12;" value="Переглянути довідку з&amp;nbsp;&lt;div&gt;роботи з файлами&lt;/div&gt;" vertex="1">
+          <mxGeometry height="54" width="190" x="580" y="1626" as="geometry" />
+        </mxCell>
+        <mxCell id="BB35QoDHw3HfkVfVzI56-83" edge="1" parent="1" source="BB35QoDHw3HfkVfVzI56-82" style="endArrow=block;endFill=0;endSize=12;html=1;rounded=0;" target="BB35QoDHw3HfkVfVzI56-67" value="">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="BB35QoDHw3HfkVfVzI56-71" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=12;" value="Переглянути інформацію&amp;nbsp;&lt;div&gt;про програму&lt;/div&gt;" vertex="1">
           <mxGeometry height="54" width="190" x="150" y="1554" as="geometry" />
