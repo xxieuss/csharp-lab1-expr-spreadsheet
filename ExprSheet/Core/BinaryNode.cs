@@ -36,6 +36,8 @@ public class BinaryNode : Node {
             case "^":
                 if (b < 0) throw new EvalException("Відʼємний показник степеня дає не ціле число");
                 if (b > 100000) throw new EvalException("Завеликий показник степеня");
+                if (BigInteger.Abs(a) > 1 && BigInteger.Abs(a).GetBitLength() * b > 100000)
+                    throw new EvalException("Результат піднесення до степеня завеликий");
                 return Value.FromNumber(BigInteger.Pow(a, (int)b));
             case "<=": return Value.FromBool(a <= b);
             case ">=": return Value.FromBool(a >= b);
