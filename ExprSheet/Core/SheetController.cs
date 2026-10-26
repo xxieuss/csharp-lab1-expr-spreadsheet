@@ -8,6 +8,7 @@ public class SheetController {
     public DependencyGraph Graph { get; private set; }
     public Cell? Selected { get; private set; }
     public DisplayMode Mode { get; private set; } = DisplayMode.Value;
+    private const int MaxFormula = 5000;
 
     public SheetController() {
         Sheet = new Sheet(10, 5);
@@ -42,6 +43,11 @@ public class SheetController {
 
     private void Link(Cell cell) {
         if (cell.Formula.Trim().Length == 0) return;
+
+        if (cell.Formula.Length > MaxFormula) {
+            cell.ErrorText = $"Вміст клітинки довший за {MaxFormula} символів";
+            return;
+        }
 
         if (cell.WrittenBy != null) {
             cell.ErrorText = $"У цю клітинку пише {cell.WrittenBy.Name}";
