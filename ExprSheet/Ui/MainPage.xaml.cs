@@ -255,9 +255,9 @@ public partial class MainPage : ContentPage {
             initialValue: "6", keyboard: Keyboard.Numeric);
         if (colsText == null) return;
 
-        if (!int.TryParse(rowsText, out int rows) || rows < 1 || rows > 500 ||
-            !int.TryParse(colsText, out int cols) || cols < 1 || cols > 100) {
-            await DisplayAlert("Помилка", "Розмір має бути від 1×1 до 500×100", "Гаразд");
+        if (!int.TryParse(rowsText, out int rows) || rows < 1 || rows > Sheet.MaxRows ||
+            !int.TryParse(colsText, out int cols) || cols < 1 || cols > Sheet.MaxCols) {
+            await DisplayAlert("Помилка", $"Розмір має бути від 1×1 до {Sheet.MaxRows}×{Sheet.MaxCols}", "Гаразд");
             return;
         }
 
