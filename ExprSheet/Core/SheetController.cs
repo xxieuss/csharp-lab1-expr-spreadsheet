@@ -74,24 +74,6 @@ public class SheetController {
         cell.Ast = ast;
     }
 
-    private void Recalculate(Cell start) {
-        EvaluateOne(start);
-
-        HashSet<Cell> affected = new HashSet<Cell>();
-        Stack<Cell> stack = new Stack<Cell>();
-        stack.Push(start);
-
-        while (stack.Count > 0) {
-            foreach (Cell d in Graph.GetDependents(stack.Pop()))
-                if (affected.Add(d)) stack.Push(d);
-        }
-
-        if (affected.Count == 0) return;
-
-        foreach (Cell c in Graph.TopologicalOrder())
-            if (affected.Contains(c)) EvaluateOne(c);
-    }
-
     private void EvaluateOne(Cell cell) {
         if (cell.Ast == null) {
             if (cell.WrittenBy != null) {
@@ -113,7 +95,7 @@ public class SheetController {
     }
 
     public bool AddRow(int index) {
-        if (index < 0 || index > Sheet.Rows) return false;
+        if (Sheet.Rows >= Sheet.MaxRows || index < 0 || index > Sheet.Rows) return false;
         Sheet.AddRow(index);
         Rebuild();
         return true;
@@ -127,7 +109,7 @@ public class SheetController {
     }
 
     public bool AddColumn(int index) {
-        if (index < 0 || index > Sheet.Cols) return false;
+        if (Sheet.Cols >= Sheet.MaxCols || index < 0 || index > Sheet.Cols) return false;
         Sheet.AddColumn(index);
         Rebuild();
         return true;

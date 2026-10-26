@@ -5,8 +5,8 @@ namespace Core;
 
 public class Sheet {
     private const int MaxColumnLetters = 3;
-    private const int MaxRows = 500;
-    private const int MaxCols = 100;
+    public const int MaxRows = 150;
+    public const int MaxCols = 40;
 
     private readonly List<List<Cell>> _rows = new List<List<Cell>>();
 

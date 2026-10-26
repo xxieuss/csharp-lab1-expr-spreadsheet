@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net">
   <diagram name="Sequence diagram" id="X9zqx75vfwHv1TDYenG1">
-    <mxGraphModel dx="2335" dy="1330" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1900" math="0" shadow="0">
+    <mxGraphModel dx="1698" dy="878" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1900" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -265,28 +265,24 @@
             <mxPoint x="335" y="1325" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="csDZVv7fojweiJ3gj_Fv-372" parent="1" style="html=1;points=[[0,0,0,0,5],[0,1,0,0,-5],[1,0,0,0,5],[1,1,0,0,-5]];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;sequenceEdgeStyle&quot;,&quot;libavoidRouting&quot;:0,&quot;curved&quot;:0,&quot;rounded&quot;:0};" value="" vertex="1">
-          <mxGeometry height="40" width="10" x="795" y="570" as="geometry" />
-        </mxCell>
-        <mxCell id="csDZVv7fojweiJ3gj_Fv-373" edge="1" parent="1" style="html=1;align=left;spacingLeft=2;endArrow=block;edgeStyle=sequenceEdgeStyle;libavoidRouting=0;curved=0;rounded=0;" target="csDZVv7fojweiJ3gj_Fv-372" value="NextLexeme()">
+        <mxCell id="csDZVv7fojweiJ3gj_Fv-373" edge="1" parent="1" style="html=1;align=left;spacingLeft=2;endArrow=block;edgeStyle=sequenceEdgeStyle;libavoidRouting=0;curved=0;rounded=0;" value="NextLexeme()">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="830" y="550" />
               <mxPoint x="830" y="580" />
             </Array>
             <mxPoint x="795.43" y="550.11" as="sourcePoint" />
+            <mxPoint x="805" y="580" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="csDZVv7fojweiJ3gj_Fv-374" parent="1" style="html=1;points=[[0,0,0,0,5],[0,1,0,0,-5],[1,0,0,0,5],[1,1,0,0,-5]];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;sequenceEdgeStyle&quot;,&quot;libavoidRouting&quot;:0,&quot;curved&quot;:0,&quot;rounded&quot;:0};" value="" vertex="1">
-          <mxGeometry height="40" width="10" x="1235" y="860" as="geometry" />
-        </mxCell>
-        <mxCell id="csDZVv7fojweiJ3gj_Fv-375" edge="1" parent="1" style="html=1;align=left;spacingLeft=2;endArrow=block;edgeStyle=sequenceEdgeStyle;libavoidRouting=0;curved=0;rounded=0;" target="csDZVv7fojweiJ3gj_Fv-374" value="HasCycle(cell)">
+        <mxCell id="csDZVv7fojweiJ3gj_Fv-375" edge="1" parent="1" style="html=1;align=left;spacingLeft=2;endArrow=block;edgeStyle=sequenceEdgeStyle;libavoidRouting=0;curved=0;rounded=0;" value="HasCycle(cell)">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="1270" y="840" />
               <mxPoint x="1270" y="870" />
             </Array>
             <mxPoint x="1235.27" y="840.02" as="sourcePoint" />
+            <mxPoint x="1244.9999999999998" y="870" as="targetPoint" />
           </mxGeometry>
         </mxCell>
       </root>

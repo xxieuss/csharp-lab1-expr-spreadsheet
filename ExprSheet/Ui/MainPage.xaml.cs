@@ -12,12 +12,12 @@ public partial class MainPage : ContentPage {
     private InfoView _infoView = InfoView.None;
 
     private readonly SheetController _controller = new SheetController();
-    private Button[,] _buttons = new Button[0, 0];
     private int _row;
     private int _col;
 	private readonly IStorage _storage = new LocalFileStorage();
     private string _currentName = "";
-    private Border[,] _cells = new Border[0, 0];
+    private Grid _sheetGrid = new Grid();
+    private Label[,] _cells = new Label[0, 0];
 
     private GoogleDriveStorage? _drive;
 
@@ -29,64 +29,110 @@ public partial class MainPage : ContentPage {
     }
 
     private void BuildGrid() {
-        SheetGrid.Clear();
-        SheetGrid.RowDefinitions.Clear();
-        SheetGrid.ColumnDefinitions.Clear();
-
         int rows = _controller.Sheet.Rows;
         int cols = _controller.Sheet.Cols;
 
-        SheetGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = HeaderWidth });
-        for (int c = 0; c < cols; c++)
-            SheetGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = CellWidth });
-
-        SheetGrid.RowDefinitions.Add(new RowDefinition { Height = CellHeight });
-        for (int r = 0; r < rows; r++)
-            SheetGrid.RowDefinitions.Add(new RowDefinition { Height = CellHeight });
-
-        SheetGrid.Add(MakeHeader(""), 0, 0);
-
-        for (int c = 0; c < cols; c++)
-            SheetGrid.Add(MakeHeader(_controller.Sheet.GetCell(0, c).Name.TrimEnd('1')), c + 1, 0);
-
-        for (int r = 0; r < rows; r++)
-            SheetGrid.Add(MakeHeader((r + 1).ToString()), 0, r + 1);
-
-        _cells = new Border[rows, cols];
-
-        for (int r = 0; r < rows; r++) {
-            for (int c = 0; c < cols; c++) {
-                Border cell = MakeCell(r, c);
-                _cells[r, c] = cell;
-                SheetGrid.Add(cell, c + 1, r + 1);
-            }
+        if (_cells.GetLength(1) == 0 || rows < _cells.GetLength(0) || cols < _cells.GetLength(1)) {
+            RebuildGrid(rows, cols);
+            return;
         }
 
+        if (rows > _cells.GetLength(0) || cols > _cells.GetLength(1)) Grow(rows, cols);
         RefreshGrid();
     }
 
-    private Border MakeCell(int row, int col) {
+    private void RebuildGrid(int rows, int cols) {
+        Grid grid = new Grid {
+            RowSpacing = 1,
+            ColumnSpacing = 1,
+            HorizontalOptions = LayoutOptions.Start,
+            VerticalOptions = LayoutOptions.Start,
+            BackgroundColor = Palette.GridLine
+        };
+
+        RowDefinitionCollection rowDefs = new RowDefinitionCollection();
+        rowDefs.Add(new RowDefinition { Height = CellHeight });
+        for (int r = 0; r < rows; r++) rowDefs.Add(new RowDefinition { Height = CellHeight });
+        grid.RowDefinitions = rowDefs;
+
+        ColumnDefinitionCollection colDefs = new ColumnDefinitionCollection();
+        colDefs.Add(new ColumnDefinition { Width = HeaderWidth });
+        for (int c = 0; c < cols; c++) colDefs.Add(new ColumnDefinition { Width = CellWidth });
+        grid.ColumnDefinitions = colDefs;
+
+        grid.Add(MakeHeader(""), 0, 0);
+        for (int c = 0; c < cols; c++)
+            grid.Add(MakeHeader(Sheet.ColumnName(c)), c + 1, 0);
+
+            _cells = new Label[rows, cols];
+
+        for (int r = 0; r < rows; r++) {
+            grid.Add(MakeHeader((r + 1).ToString()), 0, r + 1);
+            for (int c = 0; c < cols; c++) {
+                Label cell = MakeCell(r, c);
+                _cells[r, c] = cell;
+                grid.Add(cell, c + 1, r + 1);
+            }
+        }
+
+        _sheetGrid = grid;
+        GridHost.Content = grid;
+    }
+
+    private void Grow(int rows, int cols) {
+        int oldRows = _cells.GetLength(0);
+        int oldCols = _cells.GetLength(1);
+
+        _sheetGrid.BatchBegin();
+
+        for (int c = oldCols; c < cols; c++) {
+            _sheetGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = CellWidth });
+            _sheetGrid.Add(MakeHeader(Sheet.ColumnName(c)), c + 1, 0);
+        }
+
+        for (int r = oldRows; r < rows; r++) {
+            _sheetGrid.RowDefinitions.Add(new RowDefinition { Height = CellHeight });
+            _sheetGrid.Add(MakeHeader((r + 1).ToString()), 0, r + 1);
+        }
+
+        Label[,] grown = new Label[rows, cols];
+        for (int r = 0; r < oldRows; r++)
+            for (int c = 0; c < oldCols; c++)
+                grown[r, c] = _cells[r, c];
+
+        for (int r = 0; r < oldRows; r++)
+            for (int c = oldCols; c < cols; c++)
+                Place(grown, r, c);
+
+        for (int r = oldRows; r < rows; r++)
+            for (int c = 0; c < cols; c++)
+                Place(grown, r, c);
+
+        _cells = grown;
+        _sheetGrid.BatchCommit();
+    }
+
+    private void Place(Label[,] target, int row, int col) {
+        Label cell = MakeCell(row, col);
+        target[row, col] = cell;
+        _sheetGrid.Add(cell, col + 1, row + 1);
+    }
+
+    private Label MakeCell(int row, int col) {
         Label label = new Label {
             FontSize = 13,
             TextColor = Palette.Text,
+            BackgroundColor = Palette.Cell,
             VerticalTextAlignment = TextAlignment.Center,
             Padding = new Thickness(8, 0),
             LineBreakMode = LineBreakMode.TailTruncation
         };
 
-        Border border = new Border {
-            Content = label,
-            BackgroundColor = Palette.Cell,
-            Stroke = Colors.Transparent,
-            StrokeThickness = 0,
-            Padding = 0
-        };
-
         TapGestureRecognizer tap = new TapGestureRecognizer();
-        tap.Tapped += (s, e) => SelectCell(row, col);
-        border.GestureRecognizers.Add(tap);
+        tap.Tapped += (s, e) => OnCellTapped(row, col);
+        label.GestureRecognizers.Add(tap);
 
-        return border;
+        return label;
     }
 
     private static Label MakeHeader(string text) => new Label {
@@ -99,35 +145,37 @@ public partial class MainPage : ContentPage {
         VerticalTextAlignment = TextAlignment.Center
     };
 
-    private void RefreshGrid() {
-        bool expressions = _controller.Mode == DisplayMode.Expression;
-
-        for (int r = 0; r < _controller.Sheet.Rows; r++) {
-            for (int c = 0; c < _controller.Sheet.Cols; c++) {
-                Cell cell = _controller.Sheet.GetCell(r, c);
-                Border border = _cells[r, c];
-                Label label = (Label)border.Content!;
-
-                bool selected = r == _row && c == _col;
-
-                label.Text = cell.Display(_controller.Mode);
-                label.TextColor = cell.HasError() ? Palette.ErrorText : Palette.Text;
-                label.HorizontalTextAlignment = expressions ? TextAlignment.Start : TextAlignment.End;
-
-                border.BackgroundColor = cell.HasError() ? Palette.CellError
-                                       : selected        ? Palette.CellSel
-                                       :                   Palette.Cell;
-                border.Stroke = selected ? Palette.Accent : Colors.Transparent;
-                border.StrokeThickness = selected ? 2 : 0;
-            }
-        }
-    }
-
-    private void SelectCell(int row, int col) {
-        _row = row;
-        _col = col;
+    private void PaintCell(int row, int col) {
+        if (row < 0 || col < 0) return;
+        if (row >= _cells.GetLength(0) || col >= _cells.GetLength(1)) return;
 
         Cell cell = _controller.Sheet.GetCell(row, col);
+        Label label = _cells[row, col];
+        bool selected = row == _row && col == _col;
+
+        label.Text = cell.Display(_controller.Mode);
+        label.FontAttributes = selected ? FontAttributes.Bold : FontAttributes.None;
+        label.HorizontalTextAlignment = _controller.Mode == DisplayMode.Expression
+            ? TextAlignment.Start
+            : TextAlignment.End;
+
+        label.TextColor = cell.HasError() ? Palette.ErrorText
+                        : selected        ? Palette.Accent
+                        :                   Palette.Text;
+
+        label.BackgroundColor = cell.HasError() ? Palette.CellError
+                              : selected        ? Palette.CellSel
+                              :                   Palette.Cell;
+    }
+
+    private void RefreshGrid() {
+        for (int r = 0; r < _controller.Sheet.Rows; r++)
+            for (int c = 0; c < _controller.Sheet.Cols; c++)
+                PaintCell(r, c);
+    }
+
+    private void ShowFormulaBar() {
+        Cell cell = _controller.Sheet.GetCell(_row, _col);
         _controller.SelectCell(cell.Name);
 
         CellNameLabel.Text = cell.Name;
@@ -135,8 +183,27 @@ public partial class MainPage : ContentPage {
         ErrorLabel.Text = cell.HasError()
             ? (cell.ErrorPos >= 0 ? $"{cell.ErrorText}  (позиція {cell.ErrorPos + 1})" : cell.ErrorText)
             : "";
+    }
 
+    private void SelectCell(int row, int col) {
+        _row = row;
+        _col = col;
+        ShowFormulaBar();
         RefreshGrid();
+        if (_infoView != InfoView.None) RefreshInfo();
+    }
+
+    private void OnCellTapped(int row, int col) {
+        int oldRow = _row;
+        int oldCol = _col;
+
+        _row = row;
+        _col = col;
+        ShowFormulaBar();
+
+        PaintCell(oldRow, oldCol);
+        PaintCell(row, col);
+
         if (_infoView != InfoView.None) RefreshInfo();
     }
 
@@ -163,16 +230,17 @@ public partial class MainPage : ContentPage {
         RefreshGrid();
     }
 
-    private void OnAddRow(object? sender, EventArgs e) => Resize(_controller.AddRow(_row + 1));
-    private void OnRemoveRow(object? sender, EventArgs e) => Resize(_controller.RemoveRow(_row));
-    private void OnAddColumn(object? sender, EventArgs e) => Resize(_controller.AddColumn(_col + 1));
-    private void OnRemoveColumn(object? sender, EventArgs e) => Resize(_controller.RemoveColumn(_col));
+    private void OnAddRow(object? sender, EventArgs e) => Resize(_controller.AddRow(_row + 1), $"Більше ніж {Sheet.MaxRows} рядків таблиця мати не може");
+    private void OnRemoveRow(object? sender, EventArgs e) => Resize(_controller.RemoveRow(_row), "Таблиця не може лишитись без жодного рядка");
+    private void OnAddColumn(object? sender, EventArgs e) => Resize(_controller.AddColumn(_col + 1), $"Більше ніж {Sheet.MaxCols} стовпців таблиця мати не може");
+    private void OnRemoveColumn(object? sender, EventArgs e) => Resize(_controller.RemoveColumn(_col), "Таблиця не може лишитись без жодного стовпця");
 
-    private void Resize(bool done) {
+    private void Resize(bool done, string problem) {
         if (!done) {
-            ErrorLabel.Text = "Так зробити не можна: таблиця не може лишитись без рядків або стовпців";
+            ErrorLabel.Text = problem;
             return;
         }
+
         BuildGrid();
         SelectCell(Math.Min(_row, _controller.Sheet.Rows - 1),
                    Math.Min(_col, _controller.Sheet.Cols - 1));
