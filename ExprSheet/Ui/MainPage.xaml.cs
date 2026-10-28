@@ -14,7 +14,7 @@ public partial class MainPage : ContentPage {
     private readonly SheetController _controller = new SheetController();
     private int _row;
     private int _col;
-	private readonly IStorage _storage = new LocalFileStorage();
+    private readonly IStorage _storage = new LocalFileStorage();
     private string _currentName = "";
     private Grid _sheetGrid = new Grid();
     private Label[,] _cells = new Label[0, 0];
@@ -24,6 +24,7 @@ public partial class MainPage : ContentPage {
     public MainPage() {
         InitializeComponent();
         _controller.NewSheet(12, 6);
+        PaintModeButtons();
         BuildGrid();
         SelectCell(0, 0);
     }
@@ -64,7 +65,7 @@ public partial class MainPage : ContentPage {
         for (int c = 0; c < cols; c++)
             grid.Add(MakeHeader(Sheet.ColumnName(c)), c + 1, 0);
 
-            _cells = new Label[rows, cols];
+        _cells = new Label[rows, cols];
 
         for (int r = 0; r < rows; r++) {
             grid.Add(MakeHeader((r + 1).ToString()), 0, r + 1);
@@ -180,9 +181,31 @@ public partial class MainPage : ContentPage {
 
         CellNameLabel.Text = cell.Name;
         FormulaEntry.Text = cell.Formula;
-        ErrorLabel.Text = cell.HasError()
+
+        string error = cell.HasError()
             ? (cell.ErrorPos >= 0 ? $"{cell.ErrorText}  (позиція {cell.ErrorPos + 1})" : cell.ErrorText)
             : "";
+
+        ShowError(error);
+        UpdateStatus(cell);
+    }
+
+    private void ShowError(string text) {
+        ErrorLabel.Text = text;
+        ErrorLabel.IsVisible = text.Length > 0;
+    }
+
+    private void UpdateStatus(Cell cell) {
+        string value = cell.HasError() ? "помилка" : cell.Value.ToString();
+        if (value.Length == 0) value = "порожньо";
+
+        string formula = cell.Formula.Trim();
+        StatusLabel.Text = formula.Length == 0
+            ? $"{cell.Name} = {value}"
+            : $"{cell.Name} = {value}      вираз: {formula}";
+
+        string mode = _controller.Mode == DisplayMode.Value ? "ЗНАЧЕННЯ" : "ВИРАЗИ";
+        SizeLabel.Text = $"{_controller.Sheet.Rows} × {_controller.Sheet.Cols}      Режим: {mode}";
     }
 
     private void SelectCell(int row, int col) {
@@ -207,7 +230,11 @@ public partial class MainPage : ContentPage {
         if (_infoView != InfoView.None) RefreshInfo();
     }
 
-    private void OnFormulaCommitted(object? sender, EventArgs e) {
+    private void OnFormulaCommitted(object? sender, EventArgs e) => CommitFormula();
+
+    private void OnApply(object? sender, EventArgs e) => CommitFormula();
+
+    private void CommitFormula() {
         Cell cell = _controller.Sheet.GetCell(_row, _col);
         _controller.SetCellFormula(cell, FormulaEntry.Text ?? "");
 
@@ -215,19 +242,31 @@ public partial class MainPage : ContentPage {
         FormulaEntry.Focus();
     }
 
-    private void OnToggleMode(object? sender, EventArgs e) {
-        DisplayMode mode = _controller.Mode == DisplayMode.Value
-            ? DisplayMode.Expression
-            : DisplayMode.Value;
+    private void OnClear(object? sender, EventArgs e) {
+        _controller.ClearCell(_controller.Sheet.GetCell(_row, _col));
+        SelectCell(_row, _col);
+        FormulaEntry.Focus();
+    }
 
+    private void OnValueMode(object? sender, EventArgs e) => SetMode(DisplayMode.Value);
+
+    private void OnExprMode(object? sender, EventArgs e) => SetMode(DisplayMode.Expression);
+
+    private void SetMode(DisplayMode mode) {
         _controller.SetDisplayMode(mode);
-
-        bool expressions = mode == DisplayMode.Expression;
-        ModeButton.Text = expressions ? "Режим: ВИРАЗ" : "Режим: ЗНАЧЕННЯ";
-        ModeButton.BackgroundColor = expressions ? Palette.Accent : Palette.ButtonBg;
-        ModeButton.TextColor = expressions ? Palette.Window : Palette.Text;
-
+        PaintModeButtons();
         RefreshGrid();
+        UpdateStatus(_controller.Sheet.GetCell(_row, _col));
+    }
+
+    private void PaintModeButtons() {
+        bool values = _controller.Mode == DisplayMode.Value;
+
+        ValueModeButton.BackgroundColor = values ? Palette.Accent : Palette.ButtonBg;
+        ValueModeButton.TextColor = values ? Palette.Window : Palette.TextDim;
+
+        ExprModeButton.BackgroundColor = values ? Palette.ButtonBg : Palette.Accent;
+        ExprModeButton.TextColor = values ? Palette.TextDim : Palette.Window;
     }
 
     private void OnAddRow(object? sender, EventArgs e) => Resize(_controller.AddRow(_row + 1), $"Більше ніж {Sheet.MaxRows} рядків таблиця мати не може");
@@ -237,7 +276,7 @@ public partial class MainPage : ContentPage {
 
     private void Resize(bool done, string problem) {
         if (!done) {
-            ErrorLabel.Text = problem;
+            ShowError(problem);
             return;
         }
 
@@ -246,7 +285,7 @@ public partial class MainPage : ContentPage {
                    Math.Min(_col, _controller.Sheet.Cols - 1));
     }
 
-	private async void OnNew(object? sender, EventArgs e) {
+    private async void OnNew(object? sender, EventArgs e) {
         string? rowsText = await DisplayPromptAsync("Нова таблиця", "Кількість рядків:",
             initialValue: "12", keyboard: Keyboard.Numeric);
         if (rowsText == null) return;
@@ -381,6 +420,9 @@ public partial class MainPage : ContentPage {
         _drive = new GoogleDriveStorage(secret,
             Path.Combine(FileSystem.AppDataDirectory, "drive-token"),
             url => MainThread.BeginInvokeOnMainThread(() => Browser.Default.OpenAsync(url, BrowserLaunchMode.SystemPreferred)));
+
+        DriveStatusLabel.Text = "Підключено";
+        DriveStatusLabel.TextColor = Palette.Accent2;
 
         return _drive;
     }
