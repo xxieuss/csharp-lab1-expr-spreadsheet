@@ -16,6 +16,7 @@ public partial class MainPage : ContentPage {
     private int _col;
     private readonly IStorage _storage = new LocalFileStorage();
     private string _currentName = "";
+    private bool _dirty;
     private Grid _sheetGrid = new Grid();
     private Label[,] _cells = new Label[0, 0];
 
@@ -205,7 +206,8 @@ public partial class MainPage : ContentPage {
             : $"{cell.Name} = {value}      вираз: {formula}";
 
         string mode = _controller.Mode == DisplayMode.Value ? "ЗНАЧЕННЯ" : "ВИРАЗИ";
-        SizeLabel.Text = $"{_controller.Sheet.Rows} × {_controller.Sheet.Cols}      Режим: {mode}";
+        SizeLabel.Text = (_dirty ? "• незбережено      " : "")
+                       + $"{_controller.Sheet.Rows} × {_controller.Sheet.Cols}      Режим: {mode}";
     }
 
     private void SelectCell(int row, int col) {
@@ -237,6 +239,7 @@ public partial class MainPage : ContentPage {
     private void CommitFormula() {
         Cell cell = _controller.Sheet.GetCell(_row, _col);
         _controller.SetCellFormula(cell, FormulaEntry.Text ?? "");
+        _dirty = true;
 
         SelectCell(Math.Min(_row + 1, _controller.Sheet.Rows - 1), _col);
         FormulaEntry.Focus();
@@ -244,6 +247,7 @@ public partial class MainPage : ContentPage {
 
     private void OnClear(object? sender, EventArgs e) {
         _controller.ClearCell(_controller.Sheet.GetCell(_row, _col));
+        _dirty = true;
         SelectCell(_row, _col);
         FormulaEntry.Focus();
     }
@@ -269,6 +273,21 @@ public partial class MainPage : ContentPage {
         ExprModeButton.TextColor = values ? Palette.TextDim : Palette.Window;
     }
 
+    private async Task<bool> ConfirmDiscard(string question) {
+        if (!_dirty) return true;
+        return await DisplayAlert("Незбережені зміни",
+            $"У таблиці є незбережені зміни. {question}", "Так", "Скасувати");
+    }
+
+    private async void OnQuit(object? sender, EventArgs e) {
+        string message = _dirty
+            ? "У таблиці є незбережені зміни. Закрити програму й втратити їх?"
+            : "Закрити програму?";
+
+        if (!await DisplayAlert("Вихід", message, "Закрити", "Скасувати")) return;
+        Application.Current?.Quit();
+    }
+
     private void OnAddRow(object? sender, EventArgs e) => Resize(_controller.AddRow(_row + 1), $"Більше ніж {Sheet.MaxRows} рядків таблиця мати не може");
     private void OnRemoveRow(object? sender, EventArgs e) => Resize(_controller.RemoveRow(_row), "Таблиця не може лишитись без жодного рядка");
     private void OnAddColumn(object? sender, EventArgs e) => Resize(_controller.AddColumn(_col + 1), $"Більше ніж {Sheet.MaxCols} стовпців таблиця мати не може");
@@ -280,12 +299,15 @@ public partial class MainPage : ContentPage {
             return;
         }
 
+        _dirty = true;
         BuildGrid();
         SelectCell(Math.Min(_row, _controller.Sheet.Rows - 1),
                    Math.Min(_col, _controller.Sheet.Cols - 1));
     }
 
     private async void OnNew(object? sender, EventArgs e) {
+        if (!await ConfirmDiscard("Створити нову таблицю й втратити їх?")) return;
+
         string? rowsText = await DisplayPromptAsync("Нова таблиця", "Кількість рядків:",
             initialValue: "12", keyboard: Keyboard.Numeric);
         if (rowsText == null) return;
@@ -302,6 +324,7 @@ public partial class MainPage : ContentPage {
 
         _controller.NewSheet(rows, cols);
         _currentName = "";
+        _dirty = false;
         BuildGrid();
         SelectCell(0, 0);
     }
@@ -320,6 +343,7 @@ public partial class MainPage : ContentPage {
         try {
             _controller.Save(_storage, path);
             _currentName = name;
+            _dirty = false;
             await DisplayAlert("Збережено", path, "Гаразд");
         } catch (StorageException ex) {
             await DisplayAlert("Не вдалося зберегти", ex.Message, "Гаразд");
@@ -327,12 +351,15 @@ public partial class MainPage : ContentPage {
     }
 
     private async void OnOpen(object? sender, EventArgs e) {
+        if (!await ConfirmDiscard("Відкрити інший файл і втратити їх?")) return;
+
         try {
             FileResult? file = await FilePicker.Default.PickAsync();
             if (file == null) return;
 
             _controller.Load(_storage, file.FullPath);
             _currentName = file.FileName;
+            _dirty = false;
             BuildGrid();
             SelectCell(0, 0);
         } catch (StorageException ex) {
@@ -445,6 +472,7 @@ public partial class MainPage : ContentPage {
             GoogleDriveStorage drive = await GetDriveAsync();
             await Task.Run(() => _controller.Save(drive, name));
             _currentName = name;
+            _dirty = false;
             await DisplayAlert("Google Drive", $"Збережено як «{name}»", "Гаразд");
         } catch (Exception ex) {
             await DisplayAlert("Google Drive", ex.Message, "Гаразд");
@@ -452,6 +480,8 @@ public partial class MainPage : ContentPage {
     }
 
     private async void OnDriveOpen(object? sender, EventArgs e) {
+        if (!await ConfirmDiscard("Відкрити файл із Google Drive і втратити їх?")) return;
+
         string? input = await DisplayPromptAsync("Відкрити з Google Drive", "Назва файлу:",
             initialValue: _currentName.Length > 0 ? _currentName : "таблиця.json");
         if (input == null) return;
@@ -463,6 +493,7 @@ public partial class MainPage : ContentPage {
             GoogleDriveStorage drive = await GetDriveAsync();
             await Task.Run(() => _controller.Load(drive, name));
             _currentName = name;
+            _dirty = false;
             BuildGrid();
             SelectCell(0, 0);
         } catch (Exception ex) {

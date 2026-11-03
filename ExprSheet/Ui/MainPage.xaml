@@ -39,6 +39,10 @@
                     <Button x:Name="ValueModeButton" Text="Значення" Clicked="OnValueMode" />
                     <Button x:Name="ExprModeButton" Text="Вирази" Clicked="OnExprMode" />
 
+                    <BoxView Style="{StaticResource Separator}" />
+
+                    <Button Text="Вийти" Clicked="OnQuit" />
+
                 </HorizontalStackLayout>
             </ScrollView>
         </Grid>
